@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap');
+@import '../styles/demo-ops.css';
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Login surface — coral/ops, not forest sidebar */
+.ops-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+  background: var(--app-bg, #f6f6f4);
+  color: var(--app-ink, #20201f);
+  font-family: 'Geist', Arial, sans-serif;
+}
+
+.ops-login-card {
+  width: min(440px, 100%);
+  padding: 28px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 16px;
+  background: var(--app-raised, #fff);
+  box-shadow: 0 22px 60px rgba(39, 29, 25, 0.12);
+}
+
+.ops-login-card .ops-kicker {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--app-accent-deep, #7d2f20);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ops-login-card h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  letter-spacing: 0;
+}
+
+.ops-login-card > p {
+  margin: 0 0 20px;
+  color: var(--app-muted, #6e6d69);
+  font-size: 13px;
+}
+
+.ops-entry-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 18px;
+  padding: 3px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 10px;
+  background: var(--app-soft, #efeeea);
+}
+
+.ops-entry-tabs button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ops-entry-tabs button.is-active {
+  background: #fff;
+  color: var(--app-ink, #20201f);
+  box-shadow: 0 2px 8px rgba(35, 29, 26, 0.08);
+}
+
+.ops-login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.ops-login-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--app-muted, #6e6d69);
+  font-size: 11px;
+}
+
+.ops-login-form input {
+  width: 100%;
+  height: 42px;
+  padding: 0 11px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 9px;
+  background: #fbfaf8;
+  color: var(--app-ink, #20201f);
+}
+
+.ops-login-form .ops-primary {
+  width: 100%;
+}
+
+.ops-login-error {
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #fdebe5;
+  color: var(--app-accent-deep, #7d2f20);
+  font-size: 12px;
+}
+
+.ops-login-hint {
+  margin: 0;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ops-text-button {
+  background: transparent;
+  color: var(--app-accent-deep, #7d2f20);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ops-redirect {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--app-bg, #f6f6f4);
+  color: var(--app-muted, #6e6d69);
+  font-family: 'Geist', Arial, sans-serif;
+}
+
+/* Nav links inside ops-primary-nav rendered as Next Link */
+.ops-primary-nav a {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-muted, #6e6d69);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.ops-primary-nav a.is-active {
+  background: var(--app-ink, #20201f);
+  color: #fff;
+}
+
+/* Functional pages: card/list adaptations without forest sidebar */
+.ops-class-list > article {
+  display: grid;
+  gap: 6px;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--app-line, #deddd8);
+}
+
+.ops-class-list > article strong {
+  font-size: 15px;
+}
+
+.ops-class-list > article small,
+.ops-class-list > article span {
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+}
+
+.ops-form {
+  max-width: 560px;
+  margin-bottom: 24px;
+}
+
+.ops-form textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 9px;
+  background: var(--app-surface, #fbfbfa);
+  color: var(--app-ink, #20201f);
+  resize: vertical;
+}
+
+.ops-page-head p {
+  margin: 0 0 6px;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ops-lead-board-adapt {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 760px) {
+  .ops-lead-board-adapt {
+    grid-template-columns: 1fr;
+  }
+}

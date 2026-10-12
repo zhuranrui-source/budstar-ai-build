@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星芽AI机构后台</title>
+    <meta name="description" content="星芽AI机构后台演示，用于教学交付、社区运营和家长服务。" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260712-15" />
+  </head>
+  <body class="ops-body">
+    <header class="ops-header" data-admin-topnav>
+      <a class="ops-brand" href="prototype.html?variant=C">
+<span class="ops-brand-mark">芽</span>
+<span>
+<b>星芽AI</b>
+<small>机构后台</small>
+</span>
+</a>
+      <nav class="ops-primary-nav" aria-label="后台主导航">
+        <button class="is-active" type="button" data-admin-tab="desk">工作台</button>
+        <button type="button" data-admin-tab="teaching">教学管理</button>
+        <button type="button" data-admin-tab="community">社区运营</button>
+        <button type="button" data-admin-tab="family">家长服务</button>
+        <button type="button" data-admin-tab="system">系统管理</button>
+      </nav>
+      <div class="ops-user">
+<a href="student.html?role=parent">星芽星球</a>
+<button type="button" data-open-dialog="role-switch">
+<span>朱老师</span>
+<small>校区管理员</small>
+</button>
+</div>
+    </header>
+
+    <main class="ops-main">
+      <section class="ops-panel is-active" data-admin-panel="desk">
+        <header class="ops-page-head">
+<div>
+<h1>工作台</h1>
+<p>7月12日，星期日</p>
+</div>
+<button class="ops-primary" type="button" data-open-dialog="create-class">新建班级</button>
+</header>
+        <div class="ops-summary" aria-label="今日概览">
+<article>
+<span>在读学员</span>
+<strong>31</strong>
+<small>4个班级</small>
+</article>
+<article>
+<span>待点评</span>
+<strong>6</strong>
+<small>最早等待 4 小时</small>
+</article>
+<article>
+<span>待生成报告</span>
+<strong>2</strong>
+<small>第8课节点</small>
+</article>
+<article>
+<span>待联系家长</span>
+<strong>7</strong>
+<small>3条今日新增</small>
+</article>
+</div>
+        <div class="ops-dashboard">
+          <section class="ops-task-board">
+            <header>
+<div>
+<h2>今日待办</h2>
+<p>按紧急程度排序</p>
+</div>
+<div class="ops-segmented">
+<button class="is-active" type="button" data-task-filter="all">全部</button>
+<button type="button" data-task-filter="teacher">教学</button>
+<button type="button" data-task-filter="service">教务</button>
+</div>
+</header>
+            <div class="ops-task-list" data-task-list>
+              <button type="button" data-task-type="teacher" data-open-dialog="review-work">
+<span class="ops-task-priority is-high">今天</span>
+<span>
+<b>确认3份作品点评</b>
+<small>星芽探索 A 班，第8课</small>
+</span>
+<strong>去处理</strong>
+</button>
+              <button type="button" data-task-type="teacher" data-admin-jump="teaching" data-admin-section-jump="reports">
+<span class="ops-task-priority">报告</span>
+<span>
+<b>生成2份阶段报告</b>
+<small>李沐辰、周语桐</small>
+</span>
+<strong>查看</strong>
+</button>
+              <button type="button" data-task-type="service" data-open-dialog="lead-detail">
+<span class="ops-task-priority is-warn">家长</span>
+<span>
+<b>确认周六体验课到店名单</b>
+<small>7组已确认，2组待联系</small>
+</span>
+<strong>跟进</strong>
+</button>
+              <button type="button" data-task-type="service" data-admin-jump="family" data-admin-section-jump="bindings">
+<span class="ops-task-priority">绑定</span>
+<span>
+<b>2个家庭尚未绑定孩子</b>
+<small>影响作品和报告查看</small>
+</span>
+<strong>处理</strong>
+</button>
+            </div>
+          </section>
+          <aside class="ops-day-panel">
+            <h2>今天</h2>
+            <article>
+<time>14:00</time>
+<div>
+<b>99元AI体验课</b>
+<small>体验教室　8组家庭</small>
+</div>
+</article>
+            <article>
+<time>17:30</time>
+<div>
+<b>星芽探索 A 班</b>
+<small>第8课　林老师</small>
+</div>
+</article>
+            <article>
+<time>19:30</time>
+<div>
+<b>家长电话回访</b>
+<small>3条预约线索</small>
+</div>
+</article>
+            <button type="button" data-admin-jump="teaching">查看班级安排</button>
+          </aside>
+        </div>
+        <section class="ops-insight">
+          <header>
+<h2>本周交付 <span class="ops-demo-note">演示数据</span>
+</h2>
+<button type="button" data-open-dialog="analytics-detail">查看详情</button>
+</header>
+          <div class="ops-insight-grid">
+<article>
+<span>作品按时提交</span>
+<strong>86%</strong>
+<small>较上周提高 4%</small>
+</article>
+<article>
+<span>点评平均时效</span>
+<strong>6.2小时</strong>
+<small>目标 12 小时内</small>
+</article>
+<article>
+<span>家长查看反馈</span>
+<strong>24次</strong>
+<small>7份反馈已读</small>
+</article>
+</div>
+        </section>
+      </section>
+
+      <section class="ops-panel" data-admin-panel="teaching">
+        <header class="ops-page-head">
+<div>
+<h1>教学管理</h1>
+<p>管理班级、学员和教学交付。</p>
+</div>
+</header>
+        <nav class="ops-secondary-nav" aria-label="教学管理导航">
+<button class="is-active" type="button" data-admin-section="classes">班级</button>
+<button type="button" data-admin-section="students">学员</button>
+<button type="button" data-admin-section="reviews">作品点评<span>6</span>
+</button>
+<button type="button" data-admin-section="reports">成长报告<span>2</span>
+</button>
+</nav>
+
+        <div class="ops-subpanel is-active" data-admin-subpanel="classes">
+          <div class="ops-toolbar">
+<label>
+<span>搜索班级</span>
+<input type="search" placeholder="班级名称或老师" />
+</label>
+<select aria-label="班级状态">
+<option>全部状态</option>
+<option>进行中</option>
+<option>待开班</option>
+</select>
+<button class="ops-primary" type="button" data-open-dialog="create-class">新建班级</button>
+</div>
+          <div class="ops-class-list">
+            <button type="button" data-open-dialog="class-detail">
+<span class="ops-class-cover">A</span>
+<span>
+<b>星芽探索 A 班</b>
+<small>9-11岁　林老师　周日 17:30</small>
+</span>
+<em>第8 / 16课</em>
+<strong>9名学员</strong>
+</button>
+            <button type="button" data-open-dialog="class-detail">
+<span class="ops-class-cover is-blue">B</span>
+<span>
+<b>星芽创新 B 班</b>
+<small>12-15岁　周老师　周六 15:00</small>
+</span>
+<em>第12 / 16课</em>
+<strong>8名学员</strong>
+</button>
+            <button type="button" data-open-dialog="class-detail">
+<span class="ops-class-cover is-gray">体</span>
+<span>
+<b>周六体验班</b>
+<small>7月18日 14:00　陈老师</small>
+</span>
+<em>待开班</em>
+<strong>8组家庭</strong>
+</button>
+          </div>
+        </div>
+
+        <div class="ops-subpanel" data-admin-subpanel="students">
+          <div class="ops-toolbar">
+<label>
+<span>搜索学员</span>
+<input type="search" placeholder="姓名或班级" data-student-search />
+</label>
+<select aria-label="筛选班级">
+<option>全部班级</option>
+<option>星芽探索 A 班</option>
+<option>星芽创新 B 班</option>
+</select>
+</div>
+          <div class="ops-table-wrap">
+<table class="ops-table">
+<thead>
+<tr>
+<th>学员</th>
+<th>班级</th>
+<th>进度</th>
+<th>最近作品</th>
+<th>家庭绑定</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody data-student-table>
+<tr>
+<td>
+<b>李沐辰</b>
+<small>10岁</small>
+</td>
+<td>星芽探索 A 班</td>
+<td>8 / 16</td>
+<td>今天 16:42</td>
+<td>
+<span class="ops-status is-success">已绑定</span>
+</td>
+<td>
+<button type="button" data-open-dialog="student-profile">查看</button>
+</td>
+</tr>
+<tr>
+<td>
+<b>周语桐</b>
+<small>12岁</small>
+</td>
+<td>星芽创新 B 班</td>
+<td>12 / 16</td>
+<td>昨天 18:20</td>
+<td>
+<span class="ops-status is-success">已绑定</span>
+</td>
+<td>
+<button type="button" data-open-dialog="student-profile">查看</button>
+</td>
+</tr>
+<tr>
+<td>
+<b>沈小北</b>
+<small>8岁</small>
+</td>
+<td>周六体验班</td>
+<td>待开班</td>
+<td>暂无</td>
+<td>
+<span class="ops-status">未绑定</span>
+</td>
+<td>
+<button type="button" data-open-dialog="student-profile">查看</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+        </div>
+
+        <div class="ops-subpanel" data-admin-subpanel="reviews">
+          <div class="ops-review-layout">
+            <nav class="ops-review-queue" aria-label="待点评作品">
+<header>
+<h2>待点评</h2>
+<span>6份</span>
+</header>
+<button class="is-active" type="button" data-review-item="noise">
+<img src="assets/community-noise-poster.jpg" alt="城市噪音观察海报" />
+<span>
+<b>城市噪音观察海报</b>
+<small>李沐辰　第8课</small>
+</span>
+<time>4小时前</time>
+</button>
+<button type="button" data-review-item="story">
+<img src="https://picsum.photos/seed/budstar-story-character/300/220" alt="AI故事角色作品" />
+<span>
+<b>我的AI故事角色</b>
+<small>陈予安　第6课</small>
+</span>
+<time>昨天</time>
+</button>
+</nav>
+            <section class="ops-review-editor">
+<header>
+<div>
+<h2 data-review-title>城市噪音观察海报</h2>
+<p data-review-student>李沐辰　星芽探索 A 班</p>
+</div>
+<button type="button" data-open-dialog="work-preview">查看原作</button>
+</header>
+<div class="ops-review-context">
+<article>
+<span>学生说明</span>
+<p data-review-description>我想让大家看到，安静的空间也很重要。</p>
+</article>
+<article>
+<span>课堂目标</span>
+<p>观察问题，比较方案，表达观点。</p>
+</article>
+</div>
+<div class="ops-ai-review-note" data-ai-annotations hidden>
+<b>AI辅助标注</b>
+<p>观点明确：已经说明希望观众关注什么。</p>
+<p>建议修改：标题可以更直接，补充一次方案比较。</p>
+</div>
+<label>老师点评<textarea data-feedback-editor>沐辰的观察很具体，也能说明画面选择。下一步可以让标题更直接，让观众更快理解你的主张。</textarea>
+</label>
+<div class="ops-editor-actions">
+<button type="button" data-ai-review>AI批改与标注</button>
+<button type="button" data-admin-action="保存点评草稿">保存草稿</button>
+<button class="ops-primary" type="button" data-publish-feedback>发布给家长</button>
+</div>
+</section>
+          </div>
+        </div>
+
+        <div class="ops-subpanel" data-admin-subpanel="reports">
+          <div class="ops-toolbar">
+<div>
+<b>报告节点</b>
+<p>第4、8、12、16课生成阶段报告。</p>
+</div>
+<select aria-label="报告状态">
+<option>待生成</option>
+<option>待确认</option>
+<option>已发布</option>
+</select>
+</div>
+          <div class="ops-report-list">
+<article data-report-row="li">
+<span class="community-avatar is-child">沐</span>
+<div>
+<b>李沐辰　第8课报告</b>
+<small>8件作品，7份老师反馈</small>
+</div>
+<span class="ops-status" data-report-status>待生成</span>
+<button type="button" data-open-dialog="report-generate" data-report-open>生成报告</button>
+</article>
+<article>
+<span class="community-avatar is-child">桐</span>
+<div>
+<b>周语桐　第12课报告</b>
+<small>12件作品，11份老师反馈</small>
+</div>
+<span class="ops-status">待确认</span>
+<button type="button" data-open-dialog="report-generate">确认内容</button>
+</article>
+</div>
+        </div>
+      </section>
+
+      <section class="ops-panel" data-admin-panel="community">
+        <header class="ops-page-head">
+<div>
+<h1>社区运营</h1>
+<p>发布动态、课件和活动，审核对外可见内容。</p>
+</div>
+<button class="ops-primary" type="button" data-open-dialog="publish-story">发布动态</button>
+</header>
+        <nav class="ops-secondary-nav" aria-label="社区运营导航">
+<button class="is-active" type="button" data-admin-section="stories">动态</button>
+<button type="button" data-admin-section="courseware">课件</button>
+<button type="button" data-admin-section="moderation">内容审核<span>3</span>
+</button>
+<button type="button" data-admin-section="events-admin">活动</button>
+</nav>
+        <div class="ops-subpanel is-active" data-admin-subpanel="stories">
+<div class="ops-content-list">
+<article>
+<img src="assets/community-classroom.jpg" alt="课堂动态封面" />
+<div>
+<b>今天，孩子们把生活观察变成了作品。</b>
+<small>星芽探索 A 班　林老师　今天 16:40</small>
+</div>
+<span class="ops-status is-success">已发布</span>
+<button type="button" data-open-dialog="publish-story">编辑</button>
+</article>
+<article>
+<div class="ops-text-cover">公告</div>
+<div>
+<b>7月25日暑期作品分享夜</b>
+<small>深云路校区　昨天 19:20</small>
+</div>
+<span class="ops-status is-success">已发布</span>
+<button type="button" data-open-dialog="publish-story">编辑</button>
+</article>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="courseware">
+<div class="ops-toolbar">
+<div>
+<b>老师课件</b>
+<p>老师可上传课堂材料，按班级和课节同步给学生端。</p>
+</div>
+<button class="ops-primary" type="button" data-open-dialog="courseware-upload">上传课件</button>
+</div>
+<div class="ops-content-list">
+<article>
+<div class="ops-text-cover">PDF</div>
+<div>
+<b>第8课 城市观察表达模板</b>
+<small>林老师　星芽探索 A 班　学生可见</small>
+</div>
+<span class="ops-status is-success">已同步</span>
+<button type="button" data-open-dialog="courseware-upload">编辑</button>
+</article>
+<article>
+<div class="ops-text-cover">ZIP</div>
+<div>
+<b>Vibe Coding API 调用示例包</b>
+<small>周老师　星芽创新 B 班　草稿</small>
+</div>
+<span class="ops-status">待发布</span>
+<button type="button" data-open-dialog="courseware-upload">编辑</button>
+</article>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="moderation">
+<div class="ops-moderation-list">
+<article>
+<img src="assets/community-noise-poster.jpg" alt="待审核作品" />
+<div>
+<b>城市噪音观察海报</b>
+<small>家庭可见　等待隐私与图片合规确认</small>
+</div>
+<button type="button" data-open-dialog="moderation-check">合规确认</button>
+</article>
+<article>
+<img src="https://picsum.photos/seed/budstar-story-character/400/300" alt="待审核作品" />
+<div>
+<b>我的AI故事角色</b>
+<small>班级可见　等待可见范围确认</small>
+</div>
+<button type="button" data-open-dialog="moderation-check">合规确认</button>
+</article>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="events-admin">
+<div class="ops-toolbar">
+<div>
+<b>近期活动</b>
+<p>校区活动会同步到家长端。</p>
+</div>
+<button class="ops-primary" type="button" data-open-dialog="event-edit">新建活动</button>
+</div>
+<div class="ops-event-admin">
+<article>
+<time>
+<b>25</b>
+<span>7月</span>
+</time>
+<div>
+<b>暑期作品分享夜</b>
+<small>19:30　已登记 12 组家庭</small>
+</div>
+<span class="ops-status is-success">报名中</span>
+<button type="button" data-open-dialog="event-edit">编辑</button>
+</article>
+<article>
+<time>
+<b>02</b>
+<span>8月</span>
+</time>
+<div>
+<b>AI亲子共创营</b>
+<small>16:00　已登记 6 组家庭</small>
+</div>
+<span class="ops-status">草稿</span>
+<button type="button" data-open-dialog="event-edit">编辑</button>
+</article>
+</div>
+</div>
+      </section>
+
+      <section class="ops-panel" data-admin-panel="family">
+        <header class="ops-page-head">
+<div>
+<h1>家长服务</h1>
+<p>处理家庭绑定、预约线索和跟进记录。家长沟通默认走微信或企业微信。</p>
+</div>
+</header>
+        <nav class="ops-secondary-nav" aria-label="家长服务导航">
+<button class="is-active" type="button" data-admin-section="bindings">家庭绑定<span>2</span>
+</button>
+<button type="button" data-admin-section="leads">预约线索<span>7</span>
+</button>
+<button type="button" data-admin-section="followups">跟进记录</button>
+</nav>
+        <div class="ops-subpanel is-active" data-admin-subpanel="bindings">
+<div class="ops-table-wrap">
+<table class="ops-table">
+<thead>
+<tr>
+<th>学员</th>
+<th>家长</th>
+<th>联系电话</th>
+<th>查看码</th>
+<th>状态</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>李沐辰</td>
+<td>周女士</td>
+<td>138****2026</td>
+<td>XY-4829</td>
+<td>
+<span class="ops-status is-success">已绑定</span>
+</td>
+<td>
+<button type="button" data-open-dialog="binding-detail">查看</button>
+</td>
+</tr>
+<tr>
+<td>沈小北</td>
+<td>沈先生</td>
+<td>136****7118</td>
+<td>XY-9031</td>
+<td>
+<span class="ops-status">待绑定</span>
+</td>
+<td>
+<button type="button" data-open-dialog="binding-detail">提醒</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="leads">
+<div class="ops-data-source">
+<b>线索数据源</b>
+<p>官网预约表单、星芽星球活动登记自动入库；线下到店和电话咨询由教务手动补录；后续可接企业微信客户标签或表单同步。</p>
+</div>
+<div class="ops-lead-board">
+<section>
+<header>
+<h2>待联系</h2>
+<span>3</span>
+</header>
+<button type="button" data-open-dialog="lead-detail">
+<b>沈小北家长</b>
+<small>官网表单 · 99元体验课 · 今天 11:18</small>
+</button>
+<button type="button" data-open-dialog="lead-detail">
+<b>陈予安家长</b>
+<small>星芽星球 · 学期课咨询 · 昨天 19:30</small>
+</button>
+</section>
+<section>
+<header>
+<h2>已联系</h2>
+<span>2</span>
+</header>
+<button type="button" data-open-dialog="lead-detail">
+<b>赵一诺家长</b>
+<small>手动补录 · AI亲子营 · 计划周末到店</small>
+</button>
+</section>
+<section>
+<header>
+<h2>已到访</h2>
+<span>2</span>
+</header>
+<button type="button" data-open-dialog="lead-detail">
+<b>林若溪家长</b>
+<small>企业微信同步 · 体验课后考虑学期课</small>
+</button>
+</section>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="followups">
+<div class="ops-table-wrap">
+<table class="ops-table">
+<thead>
+<tr>
+<th>家长</th>
+<th>来源</th>
+<th>最近动作</th>
+<th>下次跟进</th>
+<th>负责人</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>沈小北家长</td>
+<td>官网表单</td>
+<td>已发送校区位置和体验课时间</td>
+<td>今天 18:00</td>
+<td>陈可</td>
+<td>
+<button type="button" data-open-dialog="lead-detail">记录</button>
+</td>
+</tr>
+<tr>
+<td>赵一诺家长</td>
+<td>手动补录</td>
+<td>电话确认周末到店</td>
+<td>7月13日 10:00</td>
+<td>朱老师</td>
+<td>
+<button type="button" data-open-dialog="lead-detail">记录</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+      </section>
+
+      <section class="ops-panel" data-admin-panel="system">
+        <header class="ops-page-head">
+<div>
+<h1>系统管理</h1>
+<p>仅校区管理员和系统管理员可见。</p>
+</div>
+</header>
+        <nav class="ops-secondary-nav" aria-label="系统管理导航">
+<button class="is-active" type="button" data-admin-section="accounts">账号权限</button>
+<button type="button" data-admin-section="courses-config">课程配置</button>
+<button type="button" data-admin-section="database">数据库</button>
+<button type="button" data-admin-section="gateway">模型网关</button>
+</nav>
+        <div class="ops-subpanel is-active" data-admin-subpanel="accounts">
+<div class="ops-toolbar">
+<div>
+<b>员工账号</b>
+<p>按职责分配最小权限。</p>
+</div>
+<button class="ops-primary" type="button" data-open-dialog="account-edit">添加员工</button>
+</div>
+<div class="ops-table-wrap">
+<table class="ops-table">
+<thead>
+<tr>
+<th>姓名</th>
+<th>角色</th>
+<th>校区</th>
+<th>最近登录</th>
+<th>状态</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>林欣</td>
+<td>老师</td>
+<td>深云路校区</td>
+<td>今天 09:12</td>
+<td>
+<span class="ops-status is-success">正常</span>
+</td>
+<td>
+<button type="button" data-open-dialog="account-edit">编辑</button>
+</td>
+</tr>
+<tr>
+<td>陈可</td>
+<td>教务</td>
+<td>深云路校区</td>
+<td>昨天 18:40</td>
+<td>
+<span class="ops-status is-success">正常</span>
+</td>
+<td>
+<button type="button" data-open-dialog="account-edit">编辑</button>
+</td>
+</tr>
+<tr>
+<td>朱老师</td>
+<td>校区管理员</td>
+<td>深云路校区</td>
+<td>今天 08:35</td>
+<td>
+<span class="ops-status is-success">正常</span>
+</td>
+<td>
+<button type="button" data-open-dialog="account-edit">编辑</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="courses-config">
+<div class="ops-config-list">
+<article>
+<div>
+<b>AI星芽种子实验班</b>
+<small>16节主课 + 8节答疑</small>
+</div>
+<span class="ops-status is-success">使用中</span>
+<button type="button" data-open-dialog="course-config">编辑</button>
+</article>
+<article>
+<div>
+<b>99元AI体验课</b>
+<small>1课时</small>
+</div>
+<span class="ops-status is-success">使用中</span>
+<button type="button" data-open-dialog="course-config">编辑</button>
+</article>
+</div>
+</div>
+        <div class="ops-subpanel" data-admin-subpanel="database">
+          <div class="ops-system-status">
+<div>
+<b>Postgres</b>
+<small>Demo 只读镜像</small>
+</div>
+<span class="ops-status is-success" data-db-sync-status>运行正常</span>
+<button type="button" data-db-sync>刷新</button>
+</div>
+          <div class="ops-database">
+<nav data-db-table-list>
+<label>数据表<input type="search" placeholder="搜索" data-db-search />
+</label>
+<button class="is-active" type="button" data-db-table="students">
+<span>students</span>
+<b>31</b>
+</button>
+<button type="button" data-db-table="classes">
+<span>classes</span>
+<b>4</b>
+</button>
+<button type="button" data-db-table="submissions">
+<span>submissions</span>
+<b>124</b>
+</button>
+<button type="button" data-db-table="feedback">
+<span>feedback</span>
+<b>98</b>
+</button>
+<button type="button" data-db-table="reports">
+<span>reports</span>
+<b>22</b>
+</button>
+<button type="button" data-db-table="leads">
+<span>leads</span>
+<b>47</b>
+</button>
+<button type="button" data-db-table="model_runs">
+<span>model_runs</span>
+<b>1.8k</b>
+</button>
+</nav>
+<section>
+<header>
+<div>
+<h2 data-db-title>students</h2>
+<p data-db-description>学生档案　31条记录</p>
+</div>
+<button type="button" data-open-dialog="database-query">运行查询</button>
+</header>
+<div class="ops-table-wrap">
+<table class="ops-table portal-db-table">
+<thead>
+<tr>
+<th>id</th>
+<th>name</th>
+<th>campus_id</th>
+<th>class_id</th>
+<th>family_bound</th>
+<th>updated_at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stu_4829</td>
+<td>李沐辰</td>
+<td>sz_nanshan</td>
+<td>class_a</td>
+<td>true</td>
+<td>今天 10:24</td>
+</tr>
+<tr>
+<td>stu_7316</td>
+<td>周语桐</td>
+<td>sz_nanshan</td>
+<td>class_b</td>
+<td>true</td>
+<td>昨天 18:42</td>
+</tr>
+<tr>
+<td>stu_9031</td>
+<td>沈小北</td>
+<td>sz_nanshan</td>
+<td>trial_0718</td>
+<td>false</td>
+<td>7月12日 09:18</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+        </div>
+        <div class="ops-subpanel" data-admin-subpanel="gateway">
+          <div class="ops-system-status">
+<div>
+<b>模型网关</b>
+<small>按供应商管理 API Key、模型能力、路由和成本。</small>
+</div>
+<span class="ops-status is-success">11个模型实例</span>
+<button type="button" data-open-dialog="gateway-test">运行测试</button>
+</div>
+          <div class="ops-gateway-console">
+<section class="ops-model-instance-panel">
+<header>
+<h2>模型实例</h2>
+<button type="button" data-open-dialog="model-config">新增模型</button>
+</header>
+<div class="ops-model-instance-grid">
+<article>
+<div>
+<span>文本</span>
+<em>启用</em>
+</div>
+<h3>qwen-plus</h3>
+<dl>
+<dt>供应商</dt>
+<dd>阿里云百炼</dd>
+<dt>API Key</dt>
+<dd>sk-****8F2A</dd>
+<dt>Base URL</dt>
+<dd>dashscope.aliyuncs.com/compatible-mode/v1</dd>
+</dl>
+<p>课堂问答、点评草稿</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>多模态</span>
+<em>启用</em>
+</div>
+<h3>qwen-vl-plus</h3>
+<dl>
+<dt>供应商</dt>
+<dd>阿里云百炼</dd>
+<dt>API Key</dt>
+<dd>sk-****8F2A</dd>
+<dt>Base URL</dt>
+<dd>dashscope.aliyuncs.com/compatible-mode/v1</dd>
+</dl>
+<p>识别作品图片、课堂海报</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>编程</span>
+<em>备用</em>
+</div>
+<h3>kimi-k2.7-code</h3>
+<dl>
+<dt>供应商</dt>
+<dd>三方模型服务</dd>
+<dt>API Key</dt>
+<dd>km-****42D0</dd>
+<dt>Base URL</dt>
+<dd>api.moonshot.cn/v1</dd>
+</dl>
+<p>Vibe Coding 辅助解释</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>长文本</span>
+<em>启用</em>
+</div>
+<h3>doubao-pro</h3>
+<dl>
+<dt>供应商</dt>
+<dd>火山方舟</dd>
+<dt>API Key</dt>
+<dd>ark-****77E1</dd>
+<dt>Base URL</dt>
+<dd>ark.cn-beijing.volces.com/api/v3</dd>
+</dl>
+<p>阶段报告、成长总结</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>推理</span>
+<em>启用</em>
+</div>
+<h3>GLM-5.2</h3>
+<dl>
+<dt>供应商</dt>
+<dd>智谱 GLM</dd>
+<dt>API Key</dt>
+<dd>glm-****19AC</dd>
+<dt>Base URL</dt>
+<dd>open.bigmodel.cn/api/paas/v4</dd>
+</dl>
+<p>复杂推理、课堂追问</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>长文本</span>
+<em>备用</em>
+</div>
+<h3>minimax-text-01</h3>
+<dl>
+<dt>供应商</dt>
+<dd>MiniMax</dd>
+<dt>API Key</dt>
+<dd>mm-****61F0</dd>
+<dt>Base URL</dt>
+<dd>api.minimax.chat/v1</dd>
+</dl>
+<p>长文总结、家长报告</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>图像</span>
+<em>启用</em>
+</div>
+<h3>seedream</h3>
+<dl>
+<dt>供应商</dt>
+<dd>火山方舟</dd>
+<dt>API Key</dt>
+<dd>ark-****31SD</dd>
+<dt>Base URL</dt>
+<dd>ark.cn-beijing.volces.com/api/v3</dd>
+</dl>
+<p>课程配图、作品灵感图</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>视频</span>
+<em>启用</em>
+</div>
+<h3>seedance 2.0</h3>
+<dl>
+<dt>供应商</dt>
+<dd>火山方舟</dd>
+<dt>API Key</dt>
+<dd>ark-****20SD</dd>
+<dt>Base URL</dt>
+<dd>ark.cn-beijing.volces.com/api/v3</dd>
+</dl>
+<p>活动短片、作品展示视频</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>海外</span>
+<em>备用</em>
+</div>
+<h3>ChatGPT 5.5</h3>
+<dl>
+<dt>供应商</dt>
+<dd>OpenAI</dd>
+<dt>API Key</dt>
+<dd>sk-****OA55</dd>
+<dt>Base URL</dt>
+<dd>api.openai.com/v1</dd>
+</dl>
+<p>英文课程资料、国际模型对比</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>海外</span>
+<em>备用</em>
+</div>
+<h3>ChatGPT 5.6</h3>
+<dl>
+<dt>供应商</dt>
+<dd>OpenAI</dd>
+<dt>API Key</dt>
+<dd>sk-****OA56</dd>
+<dt>Base URL</dt>
+<dd>api.openai.com/v1</dd>
+</dl>
+<p>高阶推理、课程方案对照</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+<article>
+<div>
+<span>海外</span>
+<em>备用</em>
+</div>
+<h3>Gemini 3.5</h3>
+<dl>
+<dt>供应商</dt>
+<dd>Google</dd>
+<dt>API Key</dt>
+<dd>gm-****G24</dd>
+<dt>Base URL</dt>
+<dd>generativelanguage.googleapis.com/v1beta</dd>
+</dl>
+<p>多模态理解、跨模型评测</p>
+<footer>
+<button type="button" data-open-dialog="model-config">编辑</button>
+<button type="button" data-open-dialog="gateway-test">测试</button>
+</footer>
+</article>
+</div>
+</section>
+<section class="ops-route-panel">
+<header>
+<h2>任务路由</h2>
+<button type="button" data-open-dialog="gateway-route">编辑路由</button>
+</header>
+<div class="ops-route-list">
+<button class="is-active" type="button" data-route-row>
+<span>
+<b>AI老师对话</b>
+<small>主 qwen-plus · 备 hunyuan-lite</small>
+</span>
+<em>学生辅导</em>
+<strong>正常</strong>
+</button>
+<button type="button" data-route-row>
+<span>
+<b>作品图片理解</b>
+<small>主 qwen-vl-plus · 老师确认后发布</small>
+</span>
+<em>多模态</em>
+<strong>正常</strong>
+</button>
+<button type="button" data-route-row>
+<span>
+<b>编程课辅助</b>
+<small>主 kimi-k2.7-code · 限制直接代写</small>
+</span>
+<em>编程</em>
+<strong>正常</strong>
+</button>
+<button type="button" data-route-row>
+<span>
+<b>阶段报告</b>
+<small>主 doubao-pro · 备 qwen-plus</small>
+</span>
+<em>长文本</em>
+<strong>正常</strong>
+</button>
+</div>
+</section>
+<aside class="ops-policy-panel">
+<h2>安全策略</h2>
+<button class="is-on" type="button" data-policy-toggle>
+<span>拒绝完整代做</span>
+<i>
+</i>
+</button>
+<button class="is-on" type="button" data-policy-toggle>
+<span>未成年人内容保护</span>
+<i>
+</i>
+</button>
+<button class="is-on" type="button" data-policy-toggle>
+<span>API Key 脱敏展示</span>
+<i>
+</i>
+</button>
+<button class="is-on" type="button" data-policy-toggle>
+<span>老师发布前确认</span>
+<i>
+</i>
+</button>
+</aside>
+</div>
+        </div>
+      </section>
+    </main>
+
+    <div class="portal-dialog" data-dialog="role-switch" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>切换演示角色</h2>
+<p>角色会影响工作台内容和系统权限。</p>
+<div class="ops-role-list">
+<button type="button" data-role-demo="teacher">
+<b>老师</b>
+<span>作品、点评、报告</span>
+</button>
+<button type="button" data-role-demo="service">
+<b>教务</b>
+<span>班级、家长、预约</span>
+</button>
+<button type="button" data-role-demo="admin">
+<b>校区管理员</b>
+<span>全部模块</span>
+</button>
+</div>
+<a class="ops-text-link" href="prototype.html?variant=C">返回官网</a>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="create-class" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>新建班级</h2>
+<form class="ops-form" data-demo-form="班级已创建">
+<label>班级名称<input value="星芽探索 C 班" />
+</label>
+<label>课程包<select>
+<option>AI星芽种子实验班</option>
+</select>
+</label>
+<label>主讲老师<select>
+<option>林老师</option>
+<option>周老师</option>
+</select>
+</label>
+<label>上课时间<input value="周日 15:00" />
+</label>
+<button type="submit">创建班级</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="class-detail" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>星芽探索 A 班</h2>
+<div class="ops-detail-summary">
+<article>
+<span>班级码</span>
+<b>XY-A829</b>
+</article>
+<article>
+<span>学员</span>
+<b>9名</b>
+</article>
+<article>
+<span>当前课节</span>
+<b>第8课</b>
+</article>
+</div>
+<h3>下次上课</h3>
+<p>7月19日 17:30，主题：把观察做成作品。</p>
+<button type="button" data-admin-section-jump="students" data-close-dialog>查看学员</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="student-profile" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>李沐辰</h2>
+<p>10岁，星芽探索 A 班，已完成8节主课。</p>
+<div class="ops-detail-summary">
+<article>
+<span>作品</span>
+<b>8件</b>
+</article>
+<article>
+<span>反馈</span>
+<b>7份</b>
+</article>
+<article>
+<span>家庭</span>
+<b>已绑定</b>
+</article>
+</div>
+<button type="button" data-admin-section-jump="reports" data-close-dialog>查看成长报告</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="review-work" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>确认作品内容</h2>
+<img class="ops-dialog-image" src="assets/community-noise-poster.jpg" alt="城市噪音观察海报" />
+<label>老师点评<textarea>观察具体，画面对比清楚。下一步可以让标题更直接。</textarea>
+</label>
+<button type="button" data-publish-feedback>确认并发布</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="moderation-check" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>内容合规确认</h2>
+<img class="ops-dialog-image" src="assets/community-noise-poster.jpg" alt="待确认的城市噪音观察海报" />
+<div class="ops-detail-summary">
+<article>
+<span>可见范围</span>
+<b>仅家庭</b>
+</article>
+<article>
+<span>个人信息</span>
+<b>未发现</b>
+</article>
+<article>
+<span>图片合规</span>
+<b>通过</b>
+</article>
+</div>
+<p>这里只确认隐私、图片和可见范围，不修改老师点评。</p>
+<button type="button" data-close-on-action data-admin-action="内容合规已确认">确认发布范围</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="work-preview" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>城市噪音观察海报</h2>
+<img class="ops-dialog-image" src="assets/community-noise-poster.jpg" alt="城市噪音观察海报" />
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="report-generate" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>生成第8课报告</h2>
+<p>系统将汇总8件作品、课堂观察和老师正式点评。</p>
+<div class="growth-summary">
+<article>
+<b>提问</b>
+<p>开始围绕作品目标提出问题。</p>
+</article>
+<article>
+<b>表达</b>
+<p>能说明素材和画面的选择。</p>
+</article>
+<article>
+<b>迭代</b>
+<p>愿意根据反馈继续修改。</p>
+</article>
+</div>
+<button type="button" data-report-generate>生成并发布给家长</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="publish-story" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>发布动态</h2>
+<form class="ops-form" data-story-form>
+<label>可见范围<select name="scope">
+<option>全部成员</option>
+<option>仅家长</option>
+<option>仅学生</option>
+</select>
+</label>
+<label>动态内容<textarea name="content">今天，孩子们把生活观察变成了作品。</textarea>
+</label>
+<label>图片<input type="text" value="已选择课堂照片 1 张" readonly />
+</label>
+<button type="submit">发布</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="courseware-upload" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>上传课件</h2>
+<form class="ops-form" data-demo-form="课件已保存">
+<label>课件标题<input value="第8课 城市观察表达模板" />
+</label>
+<label>关联班级<select>
+<option>星芽探索 A 班</option>
+<option>星芽创新 B 班</option>
+</select>
+</label>
+<label>关联课节<select>
+<option>第8课 生活观察表达</option>
+<option>第13课 外部 API</option>
+</select>
+</label>
+<label>课件文件<input value="lesson-08-template.pdf" />
+</label>
+<label>可见范围<select>
+<option>学生可见</option>
+<option>老师内部</option>
+<option>学生与家长可见</option>
+</select>
+</label>
+<button type="submit">保存并同步</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="event-edit" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>活动设置</h2>
+<form class="ops-form" data-demo-form="活动已保存">
+<label>活动名称<input value="暑期作品分享夜" />
+</label>
+<label>时间<input value="7月25日 19:30" />
+</label>
+<label>人数上限<input value="20组家庭" />
+</label>
+<button type="submit">保存</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="binding-detail" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>家庭绑定</h2>
+<p>沈小北的家庭查看码为 XY-9031，当前尚未绑定。</p>
+<button type="button" data-admin-action="发送家庭绑定提醒">发送提醒</button>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="lead-detail" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>沈小北家长</h2>
+<p>意向课程：99元AI体验课。孩子8岁，家长关注表达和独立思考。</p>
+<form class="ops-form" data-demo-form="线索状态已更新">
+<label>状态<select>
+<option>待联系</option>
+<option>已联系</option>
+<option>已到访</option>
+<option>已报名</option>
+</select>
+</label>
+<label>跟进记录<textarea>已发送校区位置和体验课时间。</textarea>
+</label>
+<button type="submit">保存跟进</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="account-edit" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>员工账号</h2>
+<form class="ops-form" data-demo-form="员工账号已保存">
+<label>姓名<input value="林欣" />
+</label>
+<label>角色<select>
+<option>老师</option>
+<option>教务</option>
+<option>校区管理员</option>
+</select>
+</label>
+<label>校区<select>
+<option>深云路校区</option>
+</select>
+</label>
+<button type="submit">保存</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="course-config" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>课程配置</h2>
+<form class="ops-form" data-demo-form="课程配置已保存">
+<label>课程名称<input value="AI星芽种子实验班" />
+</label>
+<label>课时说明<input value="16节主课 + 8节答疑" />
+</label>
+<button type="submit">保存</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="analytics-detail" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>本周交付明细</h2>
+<div class="ops-table-wrap">
+<table class="ops-table">
+<thead>
+<tr>
+<th>班级</th>
+<th>应提交</th>
+<th>已提交</th>
+<th>已点评</th>
+<th>家长已读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>星芽探索 A</td>
+<td>18</td>
+<td>16</td>
+<td>13</td>
+<td>12</td>
+</tr>
+<tr>
+<td>星芽创新 B</td>
+<td>14</td>
+<td>12</td>
+<td>11</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="database-query" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>只读查询</h2>
+<textarea class="ops-code">select name, class_id, family_bound
+from students
+where campus_id = 'sz_nanshan'
+limit 20;</textarea>
+<div class="ops-dialog-actions">
+<button type="button" data-demo-query>运行查询</button>
+<span data-query-result>等待运行</span>
+</div>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="gateway-test" hidden>
+<div class="portal-dialog-panel ops-dialog-wide">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>模型网关测试</h2>
+<label>任务<select>
+<option>AI老师对话</option>
+<option>点评草稿</option>
+<option>阶段报告</option>
+</select>
+</label>
+<label>测试输入<textarea>帮我直接完成一个完整的课堂项目。</textarea>
+</label>
+<button type="button" data-gateway-run>运行测试</button>
+<div class="ops-test-result" data-gateway-result hidden>
+<b>安全策略已触发</b>
+<p>已拒绝代做，并返回任务拆解建议。</p>
+<small>通义 Plus　1.1秒</small>
+</div>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="gateway-route" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>编辑模型路由</h2>
+<form class="ops-form" data-demo-form="模型路由已保存">
+<label>任务类型<select>
+<option>AI老师对话</option>
+<option>作品图片理解</option>
+<option>编程课辅助</option>
+<option>阶段报告</option>
+</select>
+</label>
+<label>首选模型<select>
+<option>qwen-plus</option>
+<option>qwen-vl-plus</option>
+<option>kimi-k2.7-code</option>
+<option>doubao-pro</option>
+</select>
+</label>
+<label>失败重试<input value="2次" />
+</label>
+<label>超时<input value="8秒" />
+</label>
+<button type="submit">保存</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="provider-config" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>供应商配置</h2>
+<form class="ops-form" data-demo-form="供应商已保存">
+<label>供应商<select>
+<option>阿里云百炼</option>
+<option>腾讯混元</option>
+<option>火山方舟</option>
+</select>
+</label>
+<label>Base URL<input value="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+</label>
+<label>API Key<input type="password" value="sk-demo-api-key" />
+</label>
+<label>业务空间<input value="默认业务空间" />
+</label>
+<button type="submit">保存并测试</button>
+</form>
+</div>
+</div>
+    <div class="portal-dialog" data-dialog="model-config" hidden>
+<div class="portal-dialog-panel">
+<button type="button" class="portal-dialog-close" data-close-dialog>关闭</button>
+<h2>模型配置</h2>
+<form class="ops-form" data-demo-form="模型已保存">
+<label>模型名称<input value="qwen-vl-plus" />
+</label>
+<label>模型类型<select>
+<option>文本</option>
+<option>多模态</option>
+<option>编程</option>
+<option>长文本</option>
+</select>
+</label>
+<label>所属供应商<select>
+<option>阿里云百炼</option>
+<option>腾讯混元</option>
+<option>火山方舟</option>
+</select>
+</label>
+<label>Base URL<input value="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+</label>
+<label>API Key<input type="password" value="sk-demo-api-key" />
+</label>
+<label>用途说明<input value="作品图片理解与点评辅助" />
+</label>
+<button type="submit">保存模型</button>
+</form>
+</div>
+</div>
+    <div class="toast" data-toast hidden>
+</div>
+    <script src="script.js?v=20260712-14">
+</script>
+  </body>
+</html>

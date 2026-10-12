@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星芽 AI Web — 全量测试报告</title>
+    <style>
+      :root {
+        --bg: #f4f1ea;
+        --ink: #1c1917;
+        --muted: #57534e;
+        --pass: #166534;
+        --pass-bg: #dcfce7;
+        --skip: #a16207;
+        --skip-bg: #fef9c3;
+        --fail: #991b1b;
+        --fail-bg: #fee2e2;
+        --card: #fffdf8;
+        --line: #d6d3d1;
+        --accent: #0f766e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, #e7e5e4 0, transparent 40%),
+          var(--bg);
+        font:
+          15px/1.55 'PingFang SC',
+          'Hiragino Sans GB',
+          'Microsoft YaHei',
+          sans-serif;
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 40px auto 64px;
+      }
+
+      header {
+        padding: 28px 32px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--card);
+        box-shadow: 0 10px 30px rgba(28, 25, 23, 0.06);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--pass-bg);
+        color: var(--pass);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      h1 {
+        margin: 14px 0 8px;
+        font-size: clamp(28px, 4vw, 36px);
+        letter-spacing: -0.03em;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .meta strong {
+        color: var(--ink);
+      }
+
+      section {
+        margin-top: 28px;
+        padding: 24px 28px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--card);
+      }
+
+      h2 {
+        margin: 0 0 16px;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .stat {
+        padding: 16px;
+        border-radius: 12px;
+        background: #fafaf9;
+        border: 1px solid var(--line);
+      }
+
+      .stat .label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat .value {
+        margin-top: 6px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pass {
+        color: var(--pass);
+        background: var(--pass-bg);
+      }
+
+      .skip {
+        color: var(--skip);
+        background: var(--skip-bg);
+      }
+
+      .fail {
+        color: var(--fail);
+        background: var(--fail-bg);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      footer {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      code {
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: #f5f5f4;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="badge">PASSED</span>
+        <h1>星芽 AI Web 全量测试报告</h1>
+        <p class="meta">
+          命令：<code>pnpm verify</code> · 退出码 <strong>0</strong> · 耗时约
+          <strong>46s</strong> · 生成时间
+          <strong>2026-07-14 18:43 CST</strong>（最近一次 verify 运行）
+        </p>
+      </header>
+
+      <section>
+        <h2>汇总</h2>
+        <div class="grid">
+          <div class="stat">
+            <div class="label">自动化用例通过</div>
+            <div class="value">140</div>
+          </div>
+          <div class="stat">
+            <div class="label">跳过</div>
+            <div class="value">1</div>
+          </div>
+          <div class="stat">
+            <div class="label">失败</div>
+            <div class="value">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">门禁项</div>
+            <div class="value">8/8</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>门禁项</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>步骤</th>
+              <th>结果</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Prisma validate / generate</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>schema 有效，Client 7.8.0 生成成功</td>
+            </tr>
+            <tr>
+              <td>format:check</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>Prettier 全部匹配</td>
+            </tr>
+            <tr>
+              <td>lint</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>api / consumer-web / admin-web / packages</td>
+            </tr>
+            <tr>
+              <td>typecheck</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>全工作区 TypeScript 通过</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>见下方分包明细</td>
+            </tr>
+            <tr>
+              <td>build</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>Nest API + Next consumer/admin 构建成功</td>
+            </tr>
+            <tr>
+              <td>smoke:api:prod</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>生产模式健康检查（含 degraded 认证配置）</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>测试明细</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>包 / 应用</th>
+              <th>框架</th>
+              <th>结果</th>
+              <th>详情</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>@budstar/contracts</code></td>
+              <td>Vitest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>12 files · 44 tests · 770ms</td>
+            </tr>
+            <tr>
+              <td><code>@budstar/admin-web</code></td>
+              <td>Vitest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>3 files · 9 tests · 295ms</td>
+            </tr>
+            <tr>
+              <td><code>@budstar/consumer-web</code></td>
+              <td>Vitest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>5 files · 10 tests · 1.80s</td>
+            </tr>
+            <tr>
+              <td><code>@budstar/api</code> 单测</td>
+              <td>Jest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>22 suites · 50 tests · 4.35s</td>
+            </tr>
+            <tr>
+              <td><code>@budstar/api</code> e2e</td>
+              <td>Jest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>27 passed · 1 skipped · 2.36s</td>
+            </tr>
+            <tr>
+              <td><code>packages/ui</code></td>
+              <td>Vitest</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>无测试文件（passWithNoTests）</td>
+            </tr>
+            <tr>
+              <td><code>packages/config</code></td>
+              <td>node:test</td>
+              <td><span class="status pass">PASS</span></td>
+              <td>占位脚本，0 tests</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>跳过项</h2>
+        <ul>
+          <li>
+            API e2e 中 1 条 PostgreSQL 并发集成用例依赖
+            <code>TEST_DATABASE_URL</code>；本地未配置时跳过，CI 提供 Postgres
+            service 时可实跑。
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>构建产物路由抽查</h2>
+        <ul>
+          <li>
+            admin-web：
+            <code>/</code> <code>/login</code> <code>/classes</code>
+            <code>/family</code> <code>/feedback</code> <code>/leads</code>
+            <code>/moderation</code> <code>/platform</code>
+            <code>/submissions</code>
+          </li>
+          <li>
+            consumer-web：
+            <code>/</code> <code>/family</code> <code>/growth</code>
+            <code>/learning</code> <code>/planet</code> <code>/robots.txt</code>
+          </li>
+        </ul>
+      </section>
+
+      <footer>
+        报告路径：
+        <code>docs/test-report.html</code>
+        · 原始日志：
+        <code>/tmp/budstar-verify.log</code>
+        · 覆盖范围对应当前 Web 交付计划 W-00～W-19
+        代码门禁，不含真实云供应方联调。
+      </footer>
+    </main>
+  </body>
+</html>

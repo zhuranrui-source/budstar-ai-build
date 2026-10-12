@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0;url=prototype.html?variant=C" />
+    <title>星芽AI | 青少年AI实践学院</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top-nav" data-top-nav>
+      <div class="top-nav-inner">
+        <a class="nav-logo" href="#home">
+          <img src="assets/budstar-logo.jpeg" alt="星芽AI" />
+          <span>星芽AI</span>
+        </a>
+        <nav class="nav-links" aria-label="网站导航">
+          <a href="#products">产品</a>
+          <a href="#path">课程</a>
+          <a href="#events">活动</a>
+          <a href="#community">社区</a>
+        </nav>
+        <div class="nav-actions">
+          <button class="nav-cta" type="button" data-open-auth="student">登录</button>
+          <button class="nav-secondary" type="button" data-gated="预约99元体验课">预约体验课</button>
+        </div>
+      </div>
+    </header>
+
+    <button class="mobile-menu" type="button" aria-label="打开导航" data-mobile-menu>☰</button>
+    <div class="mobile-drawer" data-mobile-drawer hidden>
+      <nav>
+        <a href="#products">产品</a>
+        <a href="#path">课程</a>
+        <a href="#events">活动</a>
+        <a href="#community">社区</a>
+      </nav>
+      <button class="nav-cta" type="button" data-open-auth="student">登录 / 注册</button>
+    </div>
+
+    <main class="site-main" id="home">
+      <section class="ad-carousel" aria-label="首页广告轮播">
+        <article class="ad-slide is-active" data-carousel-slide>
+          <img
+            src="https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1600&q=85"
+            alt="青少年线下AI课堂"
+          />
+          <div class="ad-copy">
+            <p class="eyebrow">99元体验课</p>
+            <h2>上一节真正的AI课</h2>
+            <p>1课时完成入门创作。</p>
+            <button type="button" class="btn-primary" data-gated="预约99元体验课">立即预约</button>
+          </div>
+        </article>
+        <article class="ad-slide" data-carousel-slide>
+          <img
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=85"
+            alt="学生小组项目讨论"
+          />
+          <div class="ad-copy">
+            <p class="eyebrow">学期课</p>
+            <h2>2个月系统性学习AI</h2>
+            <p>16课时线下 + 8课时答疑 = 24课时。</p>
+            <button type="button" class="btn-primary" data-gated="咨询学期课">咨询课包</button>
+          </div>
+        </article>
+        <article class="ad-slide" data-carousel-slide>
+          <img
+            src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=85"
+            alt="孩子在课堂展示作品"
+          />
+          <div class="ad-copy">
+            <p class="eyebrow">AI亲子营</p>
+            <h2>和孩子一起AI创作</h2>
+            <p>假期亲子共创，980元。</p>
+            <button type="button" class="btn-primary" data-gated="报名AI亲子营">报名亲子营</button>
+          </div>
+        </article>
+        <div class="carousel-controls">
+          <button type="button" data-carousel-prev aria-label="上一张">‹</button>
+          <div data-carousel-dots></div>
+          <button type="button" data-carousel-next aria-label="下一张">›</button>
+        </div>
+      </section>
+
+      <section class="hero fade-in">
+
+      <section class="section" id="products">
+        <div class="section-inner">
+          <div class="section-heading fade-in">
+            <p class="eyebrow">Products</p>
+            <h2>产品介绍</h2>
+            <p>体验入门 → 系统学习 → 假期亲子共创</p>
+          </div>
+          <div class="product-grid">
+            <article class="product-card fade-in">
+              <span>入门体验</span>
+              <h3>99元体验课</h3>
+              <strong>1课时</strong>
+              <p>首次了解AI课堂，现场完成小作品，获得学习建议。</p>
+              <button type="button" class="btn-primary" data-gated="预约99元体验课">预约</button>
+            </article>
+            <article class="product-card featured fade-in">
+              <span>主力课包</span>
+              <h3>学期课</h3>
+              <strong>4480元 / 2个月</strong>
+              <p>16课时线下课 + 8课时答疑课，共24课时，项目持续学习。</p>
+              <button type="button" class="btn-primary" data-gated="咨询学期课">咨询</button>
+            </article>
+            <article class="product-card fade-in">
+              <span>假期活动</span>
+              <h3>AI亲子营</h3>
+              <strong>980元</strong>
+              <p>亲子一起体验AI创作，假期到店、作品展示。</p>
+              <button type="button" class="btn-primary" data-gated="报名AI亲子营">报名</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-alt" id="path">
+        <div class="section-alt-inner">
+          <div class="section-heading fade-in">
+            <p class="eyebrow">Path</p>
+            <h2>成长路径</h2>
+            <p>启萌 · 探索 · 创新，匹配不同年龄</p>
+          </div>
+          <div class="path-grid">
+            <article class="flip-card fade-in" tabindex="0">
+              <div class="flip-inner">
+                <div class="flip-front">
+                  <div class="path-badge">L1</div>
+                  <h3>星芽启萌</h3>
+                  <p class="path-range">6-8岁 · AI认知与创意</p>
+                </div>
+                <div class="flip-back">
+                  <h3>星芽启萌</h3>
+                  <p>用故事和对话认识AI，学会向机器提问。培养好奇心与想象力。</p>
+                </div>
+              </div>
+            </article>
+            <article class="flip-card fade-in" tabindex="0">
+              <div class="flip-inner">
+                <div class="flip-front">
+                  <div class="path-badge">L2</div>
+                  <h3>星芽探索</h3>
+                  <p class="path-range">9-11岁 · Python与智能应用</p>
+                </div>
+                <div class="flip-back">
+                  <h3>星芽探索</h3>
+                  <p>掌握提示词与Python编程，调用AI接口做工具。培养逻辑力，把创意落地。</p>
+                </div>
+              </div>
+            </article>
+            <article class="flip-card fade-in" tabindex="0">
+              <div class="flip-inner">
+                <div class="flip-front">
+                  <div class="path-badge">L3</div>
+                  <h3>星芽创新</h3>
+                  <p class="path-range">12-15岁 · AI项目与发布</p>
+                </div>
+                <div class="flip-back">
+                  <h3>星芽创新</h3>
+                  <p>从需求出发设计AI项目，经历标注与微调。培养系统思维，让想法走向发布。</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="events">
+        <div class="section-inner">
+          <div class="section-heading fade-in">
+            <p class="eyebrow">Events</p>
+            <h2>活动预告</h2>
+            <p>到店体验、家长沟通、作品展示</p>
+          </div>
+          <div class="event-list">
+            <article class="fade-in">
+              <time>6月22日</time>
+              <div>
+                <h3>AI体验开放日</h3>
+                <p>孩子现场体验，家长了解课程。</p>
+              </div>
+              <button type="button" class="btn-ghost" data-gated="报名AI体验开放日">报名</button>
+            </article>
+            <article class="fade-in">
+              <time>7月6日</time>
+              <div>
+                <h3>Prompt Battle</h3>
+                <p>海报、故事和现场讲解。</p>
+              </div>
+              <button type="button" class="btn-ghost" data-gated="报名创意挑战赛">报名</button>
+            </article>
+            <article class="fade-in">
+              <time>7月20日</time>
+              <div>
+                <h3>家长AI沙龙</h3>
+                <p>聊清楚孩子该学什么。</p>
+              </div>
+              <button type="button" class="btn-ghost" data-gated="报名家长沙龙">报名</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-alt" id="community">
+        <div class="section-alt-inner">
+          <div class="section-heading fade-in">
+            <p class="eyebrow">Community</p>
+            <h2>星芽星球</h2>
+            <p>作业展示、答疑互动、成长档案</p>
+          </div>
+          <div class="community-grid">
+            <article class="fade-in">
+              <div class="work-art">AI</div>
+              <h3>城市噪音识别助手</h3>
+              <p>采集声音，AI做环保主题作品。</p>
+              <button type="button" class="btn-primary" data-gated="查看优秀作业详情">查看作品</button>
+            </article>
+            <article class="fade-in">
+              <div class="work-art">Q&A</div>
+              <h3>提问答疑</h3>
+              <p>老师围绕课堂项目给出建议。</p>
+              <button type="button" class="btn-primary" data-gated="向老师提问">提问</button>
+            </article>
+            <article class="fade-in">
+              <div class="work-art">✦</div>
+              <h3>AI成长档案</h3>
+              <p>记录作品、点评与成果展示。</p>
+              <button type="button" class="btn-primary" data-gated="查看我的AI成长档案">查看档案</button>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" data-auth-modal hidden>
+      <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button class="modal-close" type="button" aria-label="关闭弹窗" data-close-auth>×</button>
+        <div class="auth-brand">
+          <img src="assets/budstar-logo.jpeg" alt="星芽AI" />
+          <div>
+            <p class="eyebrow">登录后继续</p>
+            <h2 id="auth-title">登录 / 注册</h2>
+            <p data-auth-reason>登录后可预约体验课、报名活动、提问答疑。</p>
+          </div>
+        </div>
+        <div class="auth-tabs" role="tablist" aria-label="登录类型">
+          <button class="is-active" type="button" data-auth-tab="student">学生/家长</button>
+          <button type="button" data-auth-tab="admin">机构后台</button>
+        </div>
+        <form class="auth-panel is-active" data-auth-panel="student">
+          <label>手机号 / 学号<input type="text" placeholder="请输入手机号或学号" /></label>
+          <label>验证码 / 密码<input type="password" placeholder="请输入验证码或密码" /></label>
+          <button class="btn-primary" type="button" data-student-login>进入学生端</button>
+        </form>
+        <form class="auth-panel" data-auth-panel="admin">
+          <label>员工账号<input type="text" placeholder="请输入机构账号" /></label>
+          <label>后台密码<input type="password" placeholder="请输入后台密码" /></label>
+          <button class="btn-primary" type="button" data-admin-login>进入后台</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="toast" data-toast hidden></div>
+    <script src="script.js"></script>
+  </body>
+</html>

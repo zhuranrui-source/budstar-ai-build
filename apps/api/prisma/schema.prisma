@@ -1,0 +1,704 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserAccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum UserAccountKind {
+  PARENT
+  STUDENT
+  STAFF
+  PARTNER
+  PLATFORM_ADMIN
+}
+
+enum PlatformRole {
+  PLATFORM_ADMIN
+}
+
+enum StaffRoleKind {
+  TEACHER
+}
+
+enum GuardianBindingStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum GuardianConsentType {
+  MINOR_DATA_PROCESSING
+  WORK_DISPLAY
+  DISPLAY_SWITCH
+  ACTIVITY_PARTICIPATION
+}
+
+enum AppointmentLeadStatus {
+  PENDING_CONTACT
+  CONTACTED
+  APPOINTMENT_SCHEDULED
+  VISITED
+  ENROLLED
+  CLOSED
+}
+
+enum CoursePackageVersionStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MainLessonTrack {
+  AIGC
+  VIBE_CODING
+}
+
+enum ClassStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum WorkSubmissionStatus {
+  DRAFT
+  SUBMITTED
+  NEEDS_REVISION
+  RESUBMITTED
+  COMPLETED
+}
+
+enum AiFeedbackDraftStatus {
+  NOT_GENERATED
+  GENERATING
+  GENERATED
+  FAILED
+  ADOPTED
+  DISCARDED
+}
+
+enum FormalFeedbackStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum FiveDimEvaluationStatus {
+  PENDING_GENERATION
+  GENERATED
+  PENDING_REVIEW
+  CONFIRMED
+}
+
+enum GrowthReportStatus {
+  NOT_READY
+  DRAFT_GENERATING
+  PENDING_REVIEW
+  PUBLISHED
+}
+
+enum CommunityVisibilityScope {
+  FAMILY
+  CLASS
+  CAMPUS
+}
+
+enum CommunityRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CommunityContentStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  HIDDEN
+}
+
+model Campus {
+  id                             String                         @id @db.VarChar(64)
+  code                           String                         @unique @db.VarChar(64)
+  name                           String                         @db.VarChar(100)
+  createdAt                      DateTime                       @default(now())
+  updatedAt                      DateTime                       @updatedAt
+  parentProfiles                 ParentProfile[]
+  studentProfiles                StudentProfile[]
+  guardianBindings               GuardianBinding[]
+  guardianConsents               GuardianConsent[]
+  memberships                    CampusMembership[]
+  staffRoles                     StaffRole[]
+  appointmentLeads               AppointmentLead[]
+  appointmentLeadStatusHistories AppointmentLeadStatusHistory[]
+  classes                        TeachingClass[]
+  classStudents                  ClassStudent[]
+  enrollmentRecords              EnrollmentRecord[]
+  workSubmissions                WorkSubmission[]
+  aiConversations                AiConversation[]
+  aiFeedbackDrafts               AiFeedbackDraft[]
+  formalFeedbacks                FormalFeedback[]
+  fiveDimEvaluations             FiveDimEvaluation[]
+  growthReports                  GrowthReport[]
+  communityPosts                 CommunityPost[]
+}
+
+model UserAccount {
+  id                         String                         @id @default(uuid()) @db.Uuid
+  status                     UserAccountStatus              @default(ACTIVE)
+  kind                       UserAccountKind
+  loginIdentifier            String                         @unique @db.VarChar(255)
+  credentialHash             String?                        @db.VarChar(255)
+  secondFactorSubject        String?                        @db.VarChar(255)
+  platformRole               PlatformRole?
+  createdAt                  DateTime                       @default(now())
+  updatedAt                  DateTime                       @updatedAt
+  parentProfiles             ParentProfile[]
+  studentProfiles            StudentProfile[]
+  campusMemberships          CampusMembership[]
+  authenticationSessions     AuthenticationSession[]
+  auditEvents                AuditEvent[]
+  changedAppointmentStatuses AppointmentLeadStatusHistory[] @relation("AppointmentStatusActor")
+  assignedAppointmentLeads   AppointmentLead[]              @relation("AppointmentLeadAssignee")
+  createdEnrollmentRecords   EnrollmentRecord[]             @relation("EnrollmentCreator")
+}
+
+model AuthenticationSession {
+  id               String      @id @default(uuid()) @db.Uuid
+  sessionId        String      @db.Uuid
+  familyId         String      @db.Uuid
+  userAccountId    String      @db.Uuid
+  refreshTokenHash String      @unique @db.Char(64)
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  replacedById     String?     @db.Uuid
+  createdAt        DateTime    @default(now())
+  userAccount      UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+
+  @@index([userAccountId, revokedAt, expiresAt])
+  @@index([sessionId, revokedAt, expiresAt])
+  @@index([familyId, revokedAt])
+}
+
+model AuthenticationVerificationCode {
+  destination String   @id @db.VarChar(255)
+  codeHash    String   @db.Char(64)
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+model AuthenticationChallenge {
+  tokenHash    String   @id @db.Char(64)
+  accountId    String   @db.VarChar(255)
+  intendedKind String   @db.VarChar(32)
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+model AuthenticationRateLimitBucket {
+  keyHash   String   @id @db.Char(64)
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model AuditEvent {
+  id               String       @id @default(uuid()) @db.Uuid
+  actorAccountId   String?      @db.Uuid
+  action           String       @db.VarChar(64)
+  campusId         String?      @db.VarChar(64)
+  resourceType     String?      @db.VarChar(100)
+  resourceId       String?      @db.VarChar(100)
+  occurredAt       DateTime     @default(now())
+  actorUserAccount UserAccount? @relation(fields: [actorAccountId], references: [id], onDelete: SetNull)
+
+  @@index([actorAccountId, occurredAt])
+  @@index([campusId, action, occurredAt])
+}
+
+model ParentProfile {
+  id                      String            @id @default(uuid()) @db.Uuid
+  campusId                String            @db.VarChar(64)
+  userAccountId           String?           @db.Uuid
+  displayName             String            @db.VarChar(100)
+  selectedStudentProfileId String?          @db.Uuid
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  campus                  Campus            @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  userAccount             UserAccount?      @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  guardianBindings        GuardianBinding[]
+  guardianConsents        GuardianConsent[]
+
+  @@index([campusId])
+  @@index([userAccountId])
+}
+
+model StudentProfile {
+  id                     String            @id @default(uuid()) @db.Uuid
+  campusId               String            @db.VarChar(64)
+  userAccountId          String?           @db.Uuid
+  displayName            String            @db.VarChar(100)
+  familyViewCodeHash     String?           @db.Char(64)
+  familyViewCodeUpdatedAt DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  campus                 Campus            @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  userAccount            UserAccount?      @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  guardianBindings       GuardianBinding[]
+  guardianConsents       GuardianConsent[]
+  classStudents          ClassStudent[]
+  workSubmissions        WorkSubmission[]
+  aiConversations        AiConversation[]
+  formalFeedbacks        FormalFeedback[]
+  fiveDimEvaluations     FiveDimEvaluation[]
+  growthReports          GrowthReport[]
+  communityPosts         CommunityPost[]
+
+  @@index([campusId])
+  @@index([userAccountId])
+  @@index([familyViewCodeHash])
+}
+
+model GuardianBinding {
+  id               String                @id @default(uuid()) @db.Uuid
+  campusId         String                @db.VarChar(64)
+  parentProfileId  String                @db.Uuid
+  studentProfileId String                @db.Uuid
+  status           GuardianBindingStatus @default(PENDING)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  campus           Campus                @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  parentProfile    ParentProfile         @relation(fields: [parentProfileId], references: [id], onDelete: Restrict)
+  studentProfile   StudentProfile        @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@unique([campusId, parentProfileId, studentProfileId])
+  @@index([campusId, status])
+}
+
+model GuardianConsent {
+  id               String              @id @default(uuid()) @db.Uuid
+  campusId         String              @db.VarChar(64)
+  parentProfileId  String              @db.Uuid
+  studentProfileId String              @db.Uuid
+  type             GuardianConsentType
+  policyVersion    String              @db.VarChar(32)
+  granted          Boolean
+  recordedAt       DateTime            @default(now())
+  revokedAt        DateTime?
+  campus           Campus              @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  parentProfile    ParentProfile       @relation(fields: [parentProfileId], references: [id], onDelete: Restrict)
+  studentProfile   StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@index([campusId, studentProfileId, type])
+  @@index([studentProfileId, type, policyVersion])
+}
+
+model CampusMembership {
+  id            String      @id @default(uuid()) @db.Uuid
+  campusId      String      @db.VarChar(64)
+  userAccountId String      @db.Uuid
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  campus        Campus      @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  userAccount   UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Restrict)
+  roles         StaffRole[]
+
+  @@unique([campusId, userAccountId])
+  @@index([campusId, active])
+}
+
+model StaffRole {
+  id                 String           @id @default(uuid()) @db.Uuid
+  campusId           String           @db.VarChar(64)
+  campusMembershipId String           @db.Uuid
+  role               StaffRoleKind
+  createdAt          DateTime         @default(now())
+  campus             Campus           @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  campusMembership   CampusMembership @relation(fields: [campusMembershipId], references: [id], onDelete: Cascade)
+
+  @@unique([campusMembershipId, role])
+  @@index([campusId, role])
+}
+
+model AppointmentLead {
+  id                   String                         @id @default(uuid()) @db.Uuid
+  campusId             String                         @db.VarChar(64)
+  parentName           String                         @db.VarChar(50)
+  phone                String                         @db.VarChar(32)
+  childAgeOrGrade      String                         @db.VarChar(30)
+  interestedCourse     String                         @db.VarChar(100)
+  preferredContactTime String                         @db.VarChar(100)
+  idempotencyKey       String                         @unique @db.VarChar(128)
+  inputFingerprint     String                         @db.Char(64)
+  status               AppointmentLeadStatus          @default(PENDING_CONTACT)
+  assigneeAccountId    String?                        @db.Uuid
+  note                 String?                        @db.VarChar(2000)
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
+  campus               Campus                         @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  assignee             UserAccount?                   @relation("AppointmentLeadAssignee", fields: [assigneeAccountId], references: [id], onDelete: SetNull)
+  statusHistory        AppointmentLeadStatusHistory[]
+  enrollmentRecord     EnrollmentRecord?
+
+  @@index([campusId, status, createdAt])
+  @@index([inputFingerprint, createdAt])
+  @@index([campusId, assigneeAccountId])
+}
+
+model AppointmentLeadStatusHistory {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  campusId             String                 @db.VarChar(64)
+  appointmentLeadId    String                 @db.Uuid
+  fromStatus           AppointmentLeadStatus?
+  toStatus             AppointmentLeadStatus
+  changedByAccountId   String?                @db.Uuid
+  changedAt            DateTime               @default(now())
+  note                 String?                @db.VarChar(500)
+  campus               Campus                 @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  appointmentLead      AppointmentLead        @relation(fields: [appointmentLeadId], references: [id], onDelete: Cascade)
+  changedByUserAccount UserAccount?           @relation("AppointmentStatusActor", fields: [changedByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([campusId, appointmentLeadId, changedAt])
+}
+
+model PublicRateLimitBucket {
+  keyHash   String   @id @db.Char(64)
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model CoursePackageVersion {
+  id               String                     @id @default(uuid()) @db.Uuid
+  packageKey       String                     @db.VarChar(64)
+  version          String                     @db.VarChar(32)
+  title            String                     @db.VarChar(200)
+  status           CoursePackageVersionStatus @default(DRAFT)
+  publishedAt      DateTime?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  mainLessons      MainLesson[]
+  onlineQaSessions OnlineQASession[]
+  rubrics          Rubric[]
+  classes          TeachingClass[]
+
+  @@unique([packageKey, version])
+  @@index([packageKey, status])
+}
+
+model MainLesson {
+  id                     String                    @id @default(uuid()) @db.Uuid
+  coursePackageVersionId String                    @db.Uuid
+  sequence               Int
+  track                  MainLessonTrack
+  title                  String                    @db.VarChar(200)
+  theme                  String                    @db.VarChar(200)
+  coreDeliverable        String                    @db.VarChar(500)
+  learningGoals          String                    @db.VarChar(1000)
+  coursePackageVersion   CoursePackageVersion      @relation(fields: [coursePackageVersionId], references: [id], onDelete: Cascade)
+  assignmentTemplate     LessonAssignmentTemplate?
+  rubrics                Rubric[]
+  workSubmissions        WorkSubmission[]
+  aiConversations        AiConversation[]
+
+  @@unique([coursePackageVersionId, sequence])
+  @@index([coursePackageVersionId, track])
+}
+
+model OnlineQASession {
+  id                     String               @id @default(uuid()) @db.Uuid
+  coursePackageVersionId String               @db.Uuid
+  sequence               Int
+  afterLessonSequence    Int
+  title                  String               @db.VarChar(200)
+  topic                  String               @db.VarChar(500)
+  coursePackageVersion   CoursePackageVersion @relation(fields: [coursePackageVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([coursePackageVersionId, sequence])
+}
+
+model LessonAssignmentTemplate {
+  id              String           @id @default(uuid()) @db.Uuid
+  mainLessonId    String           @unique @db.Uuid
+  title           String           @db.VarChar(200)
+  requirements    String           @db.VarChar(2000)
+  submissionKinds String           @db.VarChar(200)
+  mainLesson      MainLesson       @relation(fields: [mainLessonId], references: [id], onDelete: Cascade)
+  workSubmissions WorkSubmission[]
+}
+
+model Rubric {
+  id                     String               @id @default(uuid()) @db.Uuid
+  coursePackageVersionId String               @db.Uuid
+  mainLessonId           String?              @db.Uuid
+  name                   String               @db.VarChar(200)
+  dimensionsJson         String               @db.Text
+  coursePackageVersion   CoursePackageVersion @relation(fields: [coursePackageVersionId], references: [id], onDelete: Cascade)
+  mainLesson             MainLesson?          @relation(fields: [mainLessonId], references: [id], onDelete: SetNull)
+
+  @@index([coursePackageVersionId])
+}
+
+model TeachingClass {
+  id                     String               @id @default(uuid()) @db.Uuid
+  campusId               String               @db.VarChar(64)
+  coursePackageVersionId String               @db.Uuid
+  name                   String               @db.VarChar(100)
+  classCode              String               @unique @db.VarChar(16)
+  status                 ClassStatus          @default(DRAFT)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  campus                 Campus               @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  coursePackageVersion   CoursePackageVersion @relation(fields: [coursePackageVersionId], references: [id], onDelete: Restrict)
+  students               ClassStudent[]
+  enrollmentRecords      EnrollmentRecord[]
+  workSubmissions        WorkSubmission[]
+  aiConversations        AiConversation[]
+  formalFeedbacks        FormalFeedback[]
+  growthReports          GrowthReport[]
+  communityPosts         CommunityPost[]
+
+  @@index([campusId, status])
+  @@index([coursePackageVersionId])
+  @@map("Class")
+}
+
+model ClassStudent {
+  id               String         @id @default(uuid()) @db.Uuid
+  campusId         String         @db.VarChar(64)
+  classId          String         @db.Uuid
+  studentProfileId String         @db.Uuid
+  joinedAt         DateTime       @default(now())
+  campus           Campus         @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  class            TeachingClass  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@unique([classId, studentProfileId])
+  @@index([campusId, classId])
+}
+
+model EnrollmentRecord {
+  id                 String          @id @default(uuid()) @db.Uuid
+  campusId           String          @db.VarChar(64)
+  appointmentLeadId  String          @unique @db.Uuid
+  classId            String?         @db.Uuid
+  enrolledAt         DateTime        @default(now())
+  note               String?         @db.VarChar(500)
+  createdByAccountId String?         @db.Uuid
+  campus             Campus          @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  appointmentLead    AppointmentLead @relation(fields: [appointmentLeadId], references: [id], onDelete: Restrict)
+  class              TeachingClass?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  createdBy          UserAccount?    @relation("EnrollmentCreator", fields: [createdByAccountId], references: [id], onDelete: SetNull)
+
+  @@index([campusId, enrolledAt])
+}
+
+model WorkSubmission {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  campusId             String                  @db.VarChar(64)
+  classId              String                  @db.Uuid
+  studentProfileId     String                  @db.Uuid
+  mainLessonId         String                  @db.Uuid
+  assignmentTemplateId String                  @db.Uuid
+  track                MainLessonTrack
+  status               WorkSubmissionStatus    @default(DRAFT)
+  title                String                  @db.VarChar(200)
+  contentJson          String                  @db.Text
+  submittedAt          DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  campus               Campus                  @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  class                TeachingClass           @relation(fields: [classId], references: [id], onDelete: Restrict)
+  studentProfile       StudentProfile          @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+  mainLesson           MainLesson              @relation(fields: [mainLessonId], references: [id], onDelete: Restrict)
+  assignmentTemplate   LessonAssignmentTemplate @relation(fields: [assignmentTemplateId], references: [id], onDelete: Restrict)
+  statusHistory        WorkSubmissionStatusHistory[]
+  aiFeedbackDrafts     AiFeedbackDraft[]
+  formalFeedbacks      FormalFeedback[]
+  fiveDimEvaluations   FiveDimEvaluation[]
+
+  @@unique([classId, studentProfileId, mainLessonId])
+  @@index([campusId, status, updatedAt])
+  @@index([studentProfileId, updatedAt])
+}
+
+model WorkSubmissionStatusHistory {
+  id               String               @id @default(uuid()) @db.Uuid
+  campusId         String               @db.VarChar(64)
+  workSubmissionId String               @db.Uuid
+  fromStatus       WorkSubmissionStatus?
+  toStatus         WorkSubmissionStatus
+  changedByAccountId String?            @db.Uuid
+  changedAt        DateTime             @default(now())
+  note             String?              @db.VarChar(500)
+  workSubmission   WorkSubmission       @relation(fields: [workSubmissionId], references: [id], onDelete: Cascade)
+
+  @@index([workSubmissionId, changedAt])
+  @@index([campusId, changedAt])
+}
+
+model AiConversation {
+  id               String      @id @default(uuid()) @db.Uuid
+  campusId         String      @db.VarChar(64)
+  classId          String      @db.Uuid
+  studentProfileId String      @db.Uuid
+  mainLessonId     String      @db.Uuid
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  campus           Campus      @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  class            TeachingClass @relation(fields: [classId], references: [id], onDelete: Restrict)
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+  mainLesson       MainLesson  @relation(fields: [mainLessonId], references: [id], onDelete: Restrict)
+  messages         AiMessage[]
+
+  @@index([studentProfileId, mainLessonId, updatedAt])
+  @@index([campusId, updatedAt])
+}
+
+model AiMessage {
+  id             String         @id @default(uuid()) @db.Uuid
+  conversationId String         @db.Uuid
+  role           String         @db.VarChar(16)
+  /// Minimized free text; truncated at write time.
+  content        String         @db.VarChar(800)
+  refusedHomework Boolean       @default(false)
+  modelRoute     String         @db.VarChar(16)
+  createdAt      DateTime       @default(now())
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model AiFeedbackDraft {
+  id               String               @id @default(uuid()) @db.Uuid
+  campusId         String               @db.VarChar(64)
+  workSubmissionId String               @db.Uuid
+  status           AiFeedbackDraftStatus @default(NOT_GENERATED)
+  content          String               @db.Text
+  modelRoute       String               @db.VarChar(16)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  campus           Campus               @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  workSubmission   WorkSubmission       @relation(fields: [workSubmissionId], references: [id], onDelete: Cascade)
+  formalFeedbacks  FormalFeedback[]
+
+  @@index([campusId, workSubmissionId, updatedAt])
+  @@index([workSubmissionId, status])
+}
+
+model FormalFeedback {
+  id                   String               @id @default(uuid()) @db.Uuid
+  campusId             String               @db.VarChar(64)
+  workSubmissionId     String               @db.Uuid
+  studentProfileId     String               @db.Uuid
+  classId              String               @db.Uuid
+  mainLessonId         String               @db.Uuid
+  lessonSequence       Int
+  lessonTitle          String               @db.VarChar(200)
+  status               FormalFeedbackStatus @default(DRAFT)
+  version              Int                  @default(1)
+  body                 String               @db.Text
+  highlightsJson       String               @db.Text
+  nextStepsJson        String               @db.Text
+  publishedAt          DateTime?
+  publishedByAccountId String?              @db.Uuid
+  sourceAiDraftId      String?              @db.Uuid
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  campus               Campus               @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  workSubmission       WorkSubmission       @relation(fields: [workSubmissionId], references: [id], onDelete: Restrict)
+  studentProfile       StudentProfile       @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+  class                TeachingClass        @relation(fields: [classId], references: [id], onDelete: Restrict)
+  sourceAiDraft        AiFeedbackDraft?     @relation(fields: [sourceAiDraftId], references: [id], onDelete: SetNull)
+
+  @@index([campusId, status, updatedAt])
+  @@index([studentProfileId, status, publishedAt])
+  @@index([workSubmissionId, version])
+}
+
+model FiveDimEvaluation {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  campusId             String                 @db.VarChar(64)
+  workSubmissionId     String                 @db.Uuid
+  studentProfileId     String                 @db.Uuid
+  status               FiveDimEvaluationStatus @default(PENDING_GENERATION)
+  scoresJson           String                 @db.Text
+  needsReview          Boolean                @default(false)
+  confirmedAt          DateTime?
+  confirmedByAccountId String?                @db.Uuid
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  campus               Campus                 @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  workSubmission       WorkSubmission         @relation(fields: [workSubmissionId], references: [id], onDelete: Cascade)
+  studentProfile       StudentProfile         @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@unique([workSubmissionId])
+  @@index([campusId, status, updatedAt])
+  @@index([studentProfileId, status])
+}
+
+model GrowthReport {
+  id                   String             @id @default(uuid()) @db.Uuid
+  campusId             String             @db.VarChar(64)
+  classId              String             @db.Uuid
+  studentProfileId     String             @db.Uuid
+  milestone            Int
+  status               GrowthReportStatus @default(NOT_READY)
+  summary              String             @db.Text
+  teacherObservation   String?            @db.Text
+  scoresJson           String             @db.Text
+  publishedAt          DateTime?
+  publishedByAccountId String?            @db.Uuid
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  campus               Campus             @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  class                TeachingClass      @relation(fields: [classId], references: [id], onDelete: Restrict)
+  studentProfile       StudentProfile     @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@unique([classId, studentProfileId, milestone])
+  @@index([campusId, status, updatedAt])
+  @@index([studentProfileId, status, publishedAt])
+}
+
+model CommunityPost {
+  id               String                   @id @default(uuid()) @db.Uuid
+  campusId         String                   @db.VarChar(64)
+  classId          String?                  @db.Uuid
+  studentProfileId String                   @db.Uuid
+  authorAccountId  String                   @db.Uuid
+  title            String                   @db.VarChar(200)
+  body             String                   @db.Text
+  visibilityScope  CommunityVisibilityScope
+  riskLevel        CommunityRiskLevel       @default(LOW)
+  status           CommunityContentStatus   @default(DRAFT)
+  workSubmissionId String?                  @db.Uuid
+  reviewedAt       DateTime?
+  reviewedByAccountId String?               @db.Uuid
+  reviewNote       String?                  @db.VarChar(500)
+  publishedAt      DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  campus           Campus                   @relation(fields: [campusId], references: [id], onDelete: Restrict)
+  class            TeachingClass?           @relation(fields: [classId], references: [id], onDelete: SetNull)
+  studentProfile   StudentProfile           @relation(fields: [studentProfileId], references: [id], onDelete: Restrict)
+
+  @@index([campusId, status, visibilityScope])
+  @@index([studentProfileId, status])
+  @@index([classId, status])
+}

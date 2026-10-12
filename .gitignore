@@ -9,3 +9,9 @@ build/
 
 .env
 .env.*
+!.env.example
+
+.next/
+coverage/
+.turbo/
+apps/api/src/generated/

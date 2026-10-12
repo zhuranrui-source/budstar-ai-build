@@ -1,0 +1,23 @@
+{
+  "name": "budstar-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @budstar/consumer-web --filter @budstar/admin-web --filter @budstar/api dev",
+    "build": "pnpm -r --if-present build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "smoke:api:prod": "node scripts/verify-api-production.mjs",
+    "verify": "pnpm --filter @budstar/api db:validate && pnpm --filter @budstar/api db:generate && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm smoke:api:prod"
+  },
+  "devDependencies": {
+    "prettier": "3.9.5"
+  }
+}

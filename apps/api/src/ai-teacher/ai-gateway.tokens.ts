@@ -1,0 +1,1 @@
+export const AI_GATEWAY_ADAPTER = Symbol('AI_GATEWAY_ADAPTER');

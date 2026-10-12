@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "huoyan-code": {
+      "url": "http://digital-employee-cn.oppoer.me/mcp/huoyan-code?apiKey=mcp_huoyan_code_local_agent",
+      "type": "streamable/http",
+      "headers": {
+        "Authorization": "Bearer ${env:OPPO_AGENT_GATEWAY_API_KEY}"
+      }
+    }
+  }
+}

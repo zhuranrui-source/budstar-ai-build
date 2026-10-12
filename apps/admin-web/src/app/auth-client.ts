@@ -1,0 +1,616 @@
+import type {
+  AuthenticatedSession,
+  AuthenticationChallenge,
+} from '@budstar/contracts';
+
+const SESSION_KEY = 'budstar.admin.session';
+
+type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+type FetchLike = (
+  input: string | URL | Request,
+  init?: RequestInit,
+) => Promise<Response>;
+
+export class ApiRequestError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export class SessionExpiredError extends ApiRequestError {
+  constructor() {
+    super(401, 'UNAUTHORIZED', '登录状态已过期，请重新登录');
+  }
+}
+
+export class ForbiddenError extends ApiRequestError {
+  constructor(message = '无权执行该操作') {
+    super(403, 'FORBIDDEN', message);
+  }
+}
+
+export class AdminApiClient {
+  constructor(
+    private readonly baseUrl: string,
+    private readonly fetcher: FetchLike = fetch,
+    private readonly storage: StorageLike = typeof window === 'undefined'
+      ? {
+          getItem: () => null,
+          setItem: () => undefined,
+          removeItem: () => undefined,
+        }
+      : window.sessionStorage,
+  ) {}
+
+  async login(
+    kind: 'staff' | 'platform',
+    loginIdentifier: string,
+    password: string,
+  ): Promise<AuthenticationChallenge> {
+    return this.publicRequest(`/auth/${kind}/login`, {
+      loginIdentifier,
+      password,
+    });
+  }
+
+  async verifySecondFactor(
+    kind: 'staff' | 'platform',
+    challengeToken: string,
+    code: string,
+  ): Promise<AuthenticatedSession> {
+    const session = await this.publicRequest<AuthenticatedSession>(
+      `/auth/${kind}/verify-second-factor`,
+      { challengeToken, code },
+    );
+    this.writeSession(session);
+    return session;
+  }
+
+  async getCampusOverview(campusId: string) {
+    return this.authenticatedRequest<{
+      campusId: string;
+      roles: string[];
+      modules: string[];
+    }>('/admin/overview', campusId);
+  }
+
+  async listClasses(campusId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        name: string;
+        classCode: string;
+        status: string;
+        coursePackageTitle: string;
+        coursePackageVersion: string;
+        studentCount: number;
+      }>
+    >('/admin/classes', campusId);
+  }
+
+  async createClass(
+    campusId: string,
+    body: { name: string; coursePackageVersionId: string },
+  ) {
+    return this.authenticatedRequest('/admin/classes', campusId, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async updateClass(
+    campusId: string,
+    classId: string,
+    body: { name?: string; status?: string },
+  ) {
+    return this.authenticatedRequest(`/admin/classes/${classId}`, campusId, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async listClassStudents(campusId: string, classId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        studentProfileId: string;
+        displayName: string;
+        joinedAt: string;
+      }>
+    >(`/admin/classes/${classId}/students`, campusId);
+  }
+
+  async listStudents(campusId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        displayName: string;
+        hasFamilyViewCode: boolean;
+        familyViewCodeUpdatedAt: string | null;
+        activeBindingCount: number;
+      }>
+    >('/admin/students', campusId);
+  }
+
+  async createStudent(campusId: string, body: { displayName: string }) {
+    return this.authenticatedRequest<{
+      studentProfileId: string;
+      displayName: string;
+      familyViewCode: string;
+      updatedAt: string;
+    }>('/admin/students', campusId, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async resetFamilyViewCode(campusId: string, studentProfileId: string) {
+    return this.authenticatedRequest<{
+      studentProfileId: string;
+      familyViewCode: string;
+      updatedAt: string;
+    }>(`/admin/students/${studentProfileId}/family-view-code/reset`, campusId, {
+      method: 'POST',
+      body: '{}',
+    });
+  }
+
+  async listFamilyBindings(campusId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        studentDisplayName: string;
+        studentProfileId: string;
+        status: string;
+        updatedAt: string;
+      }>
+    >('/admin/family-bindings', campusId);
+  }
+
+  async revokeFamilyBinding(campusId: string, bindingId: string) {
+    return this.authenticatedRequest(
+      `/admin/family-bindings/${bindingId}/revoke`,
+      campusId,
+      { method: 'POST', body: '{}' },
+    );
+  }
+
+  async createObjectStoragePresign(
+    campusId: string,
+    body: {
+      fileName: string;
+      contentType: string;
+      contentLength: number;
+      purpose?: string;
+    },
+  ) {
+    return this.authenticatedRequest<{
+      uploadUrl: string;
+      objectKey: string;
+      accessUrl: string;
+      expiresAt: string;
+      retryable: true;
+    }>('/object-storage/presign', campusId, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async listPublishedCoursePackages(campusId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        title: string;
+        version: string;
+        packageKey: string;
+      }>
+    >('/admin/course-packages/published', campusId);
+  }
+
+  async listSubmissions(
+    campusId: string,
+    query: { status?: string; classId?: string } = {},
+  ) {
+    const params = new URLSearchParams();
+    if (query.status) params.set('status', query.status);
+    if (query.classId) params.set('classId', query.classId);
+    const suffix = params.toString() ? `?${params}` : '';
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        className: string;
+        studentDisplayName: string;
+        lessonTitle: string;
+        lessonSequence: number;
+        track: string;
+        status: string;
+        title: string;
+        updatedAt: string;
+        submittedAt: string | null;
+      }>
+    >(`/admin/submissions${suffix}`, campusId);
+  }
+
+  async getSubmission(campusId: string, submissionId: string) {
+    return this.authenticatedRequest<{
+      id: string;
+      className: string;
+      studentDisplayName: string;
+      lessonTitle: string;
+      lessonSequence: number;
+      track: string;
+      status: string;
+      title: string;
+      content: Record<string, unknown>;
+      updatedAt: string;
+      submittedAt: string | null;
+    }>(`/admin/submissions/${submissionId}`, campusId);
+  }
+
+  async transitionSubmission(
+    campusId: string,
+    submissionId: string,
+    body: { toStatus: string; note?: string },
+  ) {
+    return this.authenticatedRequest(
+      `/admin/submissions/${submissionId}/transitions`,
+      campusId,
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+  }
+
+  async generateFeedbackDraft(campusId: string, workSubmissionId: string) {
+    return this.authenticatedRequest<{
+      id: string;
+      status: string;
+      content: string;
+    }>('/admin/feedback/drafts/generate', campusId, {
+      method: 'POST',
+      body: JSON.stringify({ workSubmissionId }),
+    });
+  }
+
+  async saveFormalFeedback(
+    campusId: string,
+    body: {
+      workSubmissionId: string;
+      body: string;
+      highlights?: string[];
+      nextSteps?: string[];
+      aiDraftId?: string;
+    },
+  ) {
+    return this.authenticatedRequest<{
+      id: string;
+      status: string;
+      version: number;
+    }>('/admin/feedback/formal', campusId, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async publishFormalFeedback(campusId: string, formalFeedbackId: string) {
+    return this.authenticatedRequest<{ id: string; status: string }>(
+      `/admin/feedback/formal/${formalFeedbackId}/publish`,
+      campusId,
+      { method: 'POST', body: '{}' },
+    );
+  }
+
+  async getLessonReportCopy(campusId: string, formalFeedbackId: string) {
+    return this.authenticatedRequest<{
+      wechatCopy: string;
+      structured: {
+        lessonTitle: string;
+        body: string;
+        highlights: string[];
+        nextSteps: string[];
+      };
+    }>(`/admin/feedback/formal/${formalFeedbackId}/lesson-report`, campusId);
+  }
+
+  async generateFiveDim(campusId: string, workSubmissionId: string) {
+    return this.authenticatedRequest<{
+      id: string;
+      status: string;
+      scores: Array<{ dimension: string; level: number; rationale: string }>;
+    }>('/admin/feedback/five-dim/generate', campusId, {
+      method: 'POST',
+      body: JSON.stringify({ workSubmissionId }),
+    });
+  }
+
+  async reviewFiveDim(
+    campusId: string,
+    evaluationId: string,
+    action: 'mark_review' | 'confirm',
+  ) {
+    return this.authenticatedRequest<{ id: string; status: string }>(
+      `/admin/feedback/five-dim/${evaluationId}/review`,
+      campusId,
+      { method: 'POST', body: JSON.stringify({ action }) },
+    );
+  }
+
+  async generateGrowthReport(
+    campusId: string,
+    body: {
+      studentProfileId: string;
+      classId: string;
+      milestone: 4 | 8 | 12 | 16;
+    },
+  ) {
+    return this.authenticatedRequest<{ id: string; status: string }>(
+      '/admin/growth/reports/generate',
+      campusId,
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+  }
+
+  async publishGrowthReport(
+    campusId: string,
+    reportId: string,
+    teacherObservation?: string,
+  ) {
+    return this.authenticatedRequest<{ id: string; status: string }>(
+      `/admin/growth/reports/${reportId}/publish`,
+      campusId,
+      {
+        method: 'POST',
+        body: JSON.stringify(teacherObservation ? { teacherObservation } : {}),
+      },
+    );
+  }
+
+  async listModerationQueue(campusId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        campusId: string;
+        classId: string | null;
+        studentProfileId: string;
+        studentDisplayName: string;
+        title: string;
+        body: string;
+        visibilityScope: string;
+        riskLevel: string;
+        status: string;
+        publishedAt: string | null;
+        createdAt: string;
+      }>
+    >('/admin/community/moderation', campusId);
+  }
+
+  async reviewCommunityPost(
+    campusId: string,
+    postId: string,
+    body: { action: 'approve' | 'reject' | 'hide'; note?: string },
+  ) {
+    return this.authenticatedRequest<{
+      id: string;
+      status: string;
+      riskLevel: string;
+    }>(`/admin/community/posts/${postId}/review`, campusId, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async listAppointmentLeads(
+    campusId: string,
+    query: { status?: string; q?: string } = {},
+  ) {
+    const params = new URLSearchParams();
+    if (query.status) params.set('status', query.status);
+    if (query.q) params.set('q', query.q);
+    const suffix = params.toString() ? `?${params}` : '';
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        parentName: string;
+        phoneMasked: string;
+        childAgeOrGrade: string;
+        interestedCourse: string;
+        preferredContactTime: string;
+        status: string;
+        assigneeAccountId: string | null;
+        note: string | null;
+        createdAt: string;
+      }>
+    >(`/admin/appointment-leads${suffix}`, campusId);
+  }
+
+  async updateAppointmentLead(
+    campusId: string,
+    leadId: string,
+    body: { assigneeAccountId?: string | null; note?: string | null },
+  ) {
+    return this.authenticatedRequest(
+      `/admin/appointment-leads/${leadId}`,
+      campusId,
+      { method: 'PATCH', body: JSON.stringify(body) },
+    );
+  }
+
+  async transitionAppointmentLead(
+    campusId: string,
+    leadId: string,
+    body: { toStatus: string; note?: string; reopenReason?: string },
+  ) {
+    return this.authenticatedRequest(
+      `/admin/appointment-leads/${leadId}/transitions`,
+      campusId,
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+  }
+
+  async getAppointmentLeadHistory(campusId: string, leadId: string) {
+    return this.authenticatedRequest<
+      Array<{
+        id: string;
+        fromStatus: string | null;
+        toStatus: string;
+        changedAt: string;
+        note: string | null;
+      }>
+    >(`/admin/appointment-leads/${leadId}/history`, campusId);
+  }
+
+  async selectCampus(campusId: string) {
+    return this.authenticatedRequest<{ campusId: string; selected: true }>(
+      '/admin/campus-context',
+      campusId,
+      { method: 'POST', body: JSON.stringify({ campusId }) },
+    );
+  }
+
+  async getPlatformOverview() {
+    return this.authenticatedRequest<{ scope: 'platform'; modules: string[] }>(
+      '/platform/overview',
+    );
+  }
+
+  async logout(): Promise<void> {
+    const session = this.readSession();
+    this.clearSession();
+    if (!session) return;
+    try {
+      await this.fetcher(`${this.baseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+    } catch {
+      // Local logout is authoritative even when the network is unavailable.
+    }
+  }
+
+  readSession(): AuthenticatedSession | null {
+    const raw = this.storage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as AuthenticatedSession;
+    } catch {
+      this.clearSession();
+      return null;
+    }
+  }
+
+  clearSession(): void {
+    this.storage.removeItem(SESSION_KEY);
+  }
+
+  async restoreSession(): Promise<AuthenticatedSession | null> {
+    const stored = this.readSession();
+    if (!stored) return null;
+    try {
+      const response = await this.fetchWithSession('/auth/session', stored);
+      const verified = await this.readResponse<AuthenticatedSession>(response);
+      this.writeSession(verified);
+      return verified;
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        try {
+          const refreshed = await this.refresh();
+          const response = await this.fetchWithSession(
+            '/auth/session',
+            refreshed,
+          );
+          return await this.readResponse<AuthenticatedSession>(response);
+        } catch {
+          this.clearSession();
+          return null;
+        }
+      }
+      if (!(error instanceof ForbiddenError)) this.clearSession();
+      throw error;
+    }
+  }
+
+  private async publicRequest<T>(path: string, body: unknown): Promise<T> {
+    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return this.readResponse<T>(response);
+  }
+
+  private async authenticatedRequest<T>(
+    path: string,
+    campusId?: string,
+    init: RequestInit = {},
+  ): Promise<T> {
+    let session = this.readSession();
+    if (!session) throw new SessionExpiredError();
+    let response = await this.fetchWithSession(path, session, campusId, init);
+    if (response.status === 401) {
+      session = await this.refresh();
+      response = await this.fetchWithSession(path, session, campusId, init);
+    }
+    if (response.status === 401) {
+      this.clearSession();
+      throw new SessionExpiredError();
+    }
+    return this.readResponse<T>(response);
+  }
+
+  private fetchWithSession(
+    path: string,
+    session: AuthenticatedSession,
+    campusId?: string,
+    init: RequestInit = {},
+  ) {
+    return this.fetcher(`${this.baseUrl}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+        Authorization: `Bearer ${session.accessToken}`,
+        ...(campusId ? { 'X-Campus-Id': campusId } : {}),
+        ...init.headers,
+      },
+    });
+  }
+
+  private async refresh(): Promise<AuthenticatedSession> {
+    const response = await this.fetcher(`${this.baseUrl}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      this.clearSession();
+      throw new SessionExpiredError();
+    }
+    const session = (await response.json()) as AuthenticatedSession;
+    this.writeSession(session);
+    return session;
+  }
+
+  private writeSession(session: AuthenticatedSession): void {
+    this.storage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
+  private async readResponse<T>(response: Response): Promise<T> {
+    const body = (await response.json()) as {
+      code?: string;
+      message?: string;
+    };
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw new ForbiddenError(body.message);
+      }
+      throw new ApiRequestError(
+        response.status,
+        body.code ?? 'INTERNAL_ERROR',
+        body.message ?? '请求失败',
+      );
+    }
+    return body as T;
+  }
+}

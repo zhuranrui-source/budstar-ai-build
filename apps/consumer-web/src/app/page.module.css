@@ -1,0 +1,4 @@
+/* Deprecated neo-brutalist / forest sidebar styles removed.
+ * Visual system now lives in demo-toon / demo-community / demo-ops CSS.
+ * Kept as an empty module so any stray import does not resurrect old look.
+ */

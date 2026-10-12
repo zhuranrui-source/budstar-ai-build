@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星芽星球 | 家长社区</title>
+    <meta name="description" content="星芽星球帮助家长查看课堂动态、孩子作品、老师反馈和近期活动。" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260712-13" />
+  </head>
+  <body class="community-body">
+    <header class="community-header" data-student-nav>
+      <div class="community-brand-group"><a class="community-brand" href="prototype.html?variant=C"><span class="community-brand-mark">芽</span><span><b>星芽星球</b><small>家长社区</small></span></a></div>
+      <nav class="community-nav" aria-label="星芽星球导航">
+        <button class="is-active" type="button" data-student-tab="planet">星球</button>
+        <button type="button" data-student-tab="child" data-role-nav="learning">孩子</button>
+        <button type="button" data-student-tab="events" data-role-nav="work">活动</button>
+      </nav>
+      <div class="community-account">
+        <a class="community-back-home" href="prototype.html?variant=C">← 返回首页</a>
+        <button class="community-avatar" type="button" data-account-trigger aria-label="打开个人菜单" aria-expanded="false"><img data-account-avatar src="assets/avatar-placeholder.svg" alt="用户头像" /></button>
+      </div>
+    </header>
+
+    <aside class="account-popover community-account-popover" data-account-popover hidden>
+      <header><img data-menu-avatar src="assets/avatar-placeholder.svg" alt="用户头像" /><div><b data-menu-name>周女士</b><small data-menu-role>家长账号</small></div></header>
+      <nav class="account-menu-links" data-account-shortcuts>
+        <button type="button" data-account-destination="messages"><span><b>消息中心</b><small>作业提醒、批改反馈与活动通知</small></span><strong>←</strong></button>
+        <button type="button" data-account-destination="profile"><span><b>账号与隐私</b><small>个人资料、身份与绑定</small></span><strong>←</strong></button>
+      </nav>
+      <button class="account-switch-role" type="button" data-account-destination="role"><span><b>切换身份</b><small>学生 / 家长</small></span><strong>←</strong></button>
+      <button class="account-help" type="button" data-account-destination="help">帮助与反馈 <span>←</span></button>
+      <button class="account-logout" type="button" data-account-logout>退出登录</button>
+      <section class="account-flyout" data-account-flyout="messages" hidden><h3>最近提醒</h3><p>只展示需要处理的学习待办和老师反馈。</p><div class="account-notice-list"><button type="button" data-student-tab-jump="homework" data-student-only><span>待办</span><div><b>第 8 课作业今天截止</b><small>今天 18:00 前完成预览并提交</small></div></button><button type="button" data-student-tab-jump="child" data-parent-only><span>反馈</span><div><b>老师更新了作品点评</b><small>重点关注观点表达与比较思路</small></div></button><button type="button" data-student-tab-jump="courses"><span>课程</span><div><b>第 9 课学习任务已发布</b><small>准备 1 分钟项目介绍</small></div></button></div><button class="account-flyout-action" type="button" data-student-tab-jump="messages">查看全部消息</button></section>
+      <section class="account-flyout" data-account-flyout="profile" hidden><div class="account-profile-summary"><img src="assets/avatar-placeholder.svg" alt="用户头像" /><div><b data-dialog-account-name>周女士</b><small data-dialog-account-role>家长账号</small></div></div><div class="account-privacy-list"><button type="button" data-admin-action="编辑个人资料"><span><b>个人资料</b><small>头像、昵称和身份信息</small></span></button><button type="button" data-admin-action="管理手机号绑定"><span><b>手机号</b><small>138****2026 · 已绑定</small></span></button><button type="button" data-admin-action="查看隐私设置"><span><b>隐私设置</b><small>作品仅对本人及家庭成员可见</small></span></button></div></section>
+      <section class="account-flyout" data-account-flyout="role" hidden><h3>选择使用身份</h3><p>身份会影响星芽星球中可查看和操作的内容。</p><div class="account-role-options"><button type="button" data-account-role-choice="student"><b>我是学生</b><small>课程、作业和作品提交</small></button><button type="button" data-account-role-choice="parent"><b>我是家长</b><small>成长反馈、活动和作品预览</small></button></div></section>
+      <section class="account-flyout" data-account-flyout="help" hidden><h3>需要帮助？</h3><div class="account-help-list"><button type="button" data-admin-action="查看使用帮助"><b>使用帮助</b><small>登录、身份和作品查看说明</small></button><button type="button" data-admin-action="提交问题反馈"><b>问题反馈</b><small>告诉我们遇到的问题</small></button><button type="button" data-admin-action="联系课程顾问"><b>联系课程顾问</b><small>课程与到店体验咨询</small></button></div></section>
+    </aside>
+
+    <main class="community-main">
+      <section class="community-panel is-active" data-student-panel="planet">
+        <div class="community-page-head">
+          <div><h1 data-planet-title>星球动态</h1><p data-planet-copy>老师动态、作品和活动消息。</p></div>
+        </div>
+
+        <div class="community-layout">
+          <div class="community-feed" data-feed-list>
+            <article class="community-post community-post-compact student-task-notice" data-feed-type="class" data-student-only hidden>
+              <header class="community-post-author"><span class="community-avatar is-teacher">林</span><div><b>第8课任务已发布</b><small>星芽课程　今天</small></div><span class="community-visibility">成员可见</span></header>
+              <div class="community-post-copy"><h2>完成一份城市观察表达</h2><p>提交作品前先预览标题、链接和创作说明，AI老师可以陪你检查表达是否清楚。</p></div>
+              <button class="community-link-button" type="button" data-student-tab-jump="homework">进入作业</button>
+            </article>
+            <article class="community-post" data-feed-type="class">
+              <header class="community-post-author">
+                <span class="community-avatar is-teacher">林</span>
+                <div><b>林老师</b><small>星芽课程　今天 16:40</small></div>
+                <span class="community-visibility">成员可见</span>
+              </header>
+              <div class="community-post-copy">
+                <h2>今天，孩子们把生活观察变成了作品。</h2>
+                <p>大家先记录身边的问题，再比较不同表达方式。沐辰在小组讨论里说清楚了自己的选择。</p>
+              </div>
+              <button class="community-post-media" type="button" data-open-dialog="class-story">
+                <img src="assets/community-classroom.jpg" alt="孩子们在星芽AI课堂围绕电脑讨论作品" />
+              </button>
+              <footer class="community-post-actions">
+                <button type="button" data-like-button><span>赞</span><b>18</b></button>
+                <button type="button" data-open-dialog="class-story">留言 6</button>
+                <button type="button" data-admin-action="收藏课堂动态">收藏</button>
+              </footer>
+            </article>
+
+            <article class="community-post" data-feed-type="class">
+              <header class="community-post-author">
+                <span class="community-avatar is-child">沐</span>
+                <div><b>李沐辰的作品</b><small>第 8 课　老师已确认</small></div>
+                <span class="community-visibility">家庭可见</span>
+              </header>
+              <div class="community-post-copy">
+                <h2>城市噪音观察海报</h2>
+                <p>沐辰比较了交通、施工和公园的声音，并用画面说明自己希望改变什么。</p>
+              </div>
+              <button class="community-post-media is-project" type="button" data-open-dialog="work-story">
+                <img src="assets/community-noise-poster.jpg" alt="城市噪音观察主题学生作品" />
+              </button>
+              <div class="community-teacher-note"><b>老师反馈</b><p>作品的观察很具体。下一步可以让标题更直接，让观众一眼看懂你的主张。</p></div>
+              <footer class="community-post-actions">
+                <button type="button" data-like-button><span>赞</span><b>12</b></button>
+                <button type="button" data-open-dialog="work-story">查看作品</button>
+              </footer>
+            </article>
+
+            <article class="community-post community-post-compact" data-feed-type="campus" data-parent-only>
+              <header class="community-post-author">
+                <span class="community-avatar is-campus">星</span>
+                <div><b>星芽AI</b><small>活动通知　昨天 19:20</small></div>
+              </header>
+              <div class="community-post-copy">
+                <h2>7月25日，孩子们一起做作品分享。</h2>
+                <p>家长可以到店观看展示。活动席位有限，请提前登记。</p>
+              </div>
+              <button class="community-link-button" type="button" data-open-dialog="event-booking" data-event-title="暑期作品分享夜" data-event-time="7月25日 19:30" data-event-detail="孩子展示项目，家长到店观看。">查看活动</button>
+            </article>
+            <div class="community-empty" data-feed-empty hidden><b>这里还没有动态</b><p>切换到其他分类看看。</p></div>
+          </div>
+
+          <aside class="community-side">
+            <section class="community-child-brief">
+              <header><span class="community-avatar is-child">沐</span><div><b>李沐辰</b><small>AI星芽种子实验班</small></div></header>
+              <div class="community-progress-copy"><span>当前进度</span><strong>第 8 / 16 课</strong></div>
+              <div class="community-progress"><i style="--progress:50%"></i></div>
+              <p>最近重点：表达观点，并说明修改理由。</p>
+              <button type="button" data-student-tab-jump="child">查看成长</button>
+            </section>
+            <section class="community-next-event" data-parent-only>
+              <span>近期活动</span>
+              <time datetime="2026-07-25">7月25日　19:30</time>
+              <h3>暑期作品分享夜</h3>
+              <p>线下空间，家长可到店观看。</p>
+              <button type="button" data-open-dialog="event-booking" data-event-title="暑期作品分享夜" data-event-time="7月25日 19:30" data-event-detail="孩子展示项目，家长到店观看。">登记参加</button>
+            </section>
+            <section class="community-rule"><b>这是一个封闭社区</b><p>只有已连接的学生、家庭和老师可以查看内容。</p></section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="community-panel" data-student-panel="child">
+        <div class="community-page-head">
+          <div><h1>孩子成长</h1><p>课程、作品和老师反馈集中在这里。</p></div>
+          <button class="community-primary" type="button" data-open-dialog="growth-report">查看阶段报告</button>
+        </div>
+        <section class="child-overview">
+          <div class="child-identity"><span class="community-avatar is-child is-large">沐</span><div><h2>李沐辰</h2><p>10岁　AI星芽种子实验班</p></div></div>
+          <div class="child-status-grid"><article><span>课程</span><strong>8 / 16</strong><small>完成主课</small></article><article><span>作品</span><strong>8</strong><small>老师已确认</small></article><article><span>反馈</span><strong>7</strong><small>家长已查看</small></article></div>
+        </section>
+        <div class="child-content-grid">
+          <section class="child-works">
+            <div class="community-section-head"><h2>最近作品</h2><button type="button" data-open-dialog="portfolio">查看全部</button></div>
+            <div class="child-work-grid">
+              <button type="button" data-parent-submission data-open-dialog="work-story" hidden><img src="assets/community-noise-poster.jpg" alt="孩子最新提交的作业" /><span><b data-parent-submission-title>最新作业</b><small data-parent-submission-meta>等待老师批改</small></span></button>
+              <button type="button" data-open-dialog="work-story"><img src="assets/community-noise-poster.jpg" alt="城市噪音观察海报" /><span><b>城市噪音观察海报</b><small>第8课　老师已确认</small></span></button>
+              <button type="button" data-open-dialog="portfolio"><img src="https://picsum.photos/seed/budstar-story-character/800/600" alt="AI故事角色作品" /><span><b>我的AI故事角色</b><small>第6课　老师已确认</small></span></button>
+            </div>
+          </section>
+          <aside class="child-feedback">
+            <div class="community-section-head"><h2>老师反馈</h2></div>
+            <article><time>今天</time><div><b>表达更具体了</b><p>能说明素材选择，也愿意比较不同版本。</p></div></article>
+            <article><time>7月5日</time><div><b>开始主动复盘</b><p>完成作品后，能指出下一步要修改的地方。</p></div></article>
+            <article><time>6月28日</time><div><b>提问更有目标</b><p>从询问工具用法，转向思考作品要解决什么问题。</p></div></article>
+          </aside>
+        </div>
+      </section>
+
+      <section class="community-panel" data-student-panel="courses" data-student-only>
+        <div class="community-page-head"><div><h1>我的课程</h1><p>先理解任务，再开始创作。</p></div><span class="community-role-badge">学生模式</span></div>
+        <section class="student-course-hero">
+          <div><span>AI星芽种子实验班</span><h2>第 8 课：让观点被看见</h2><p>从生活观察中选择一个问题，用画面和一句明确标题表达自己的主张。</p><div class="student-course-progress"><i style="--progress:50%"></i></div><small>8 / 16 节主课</small></div>
+          <button type="button" data-student-tab-jump="homework">查看本课作业</button>
+        </section>
+        <div class="student-lesson-list">
+          <article class="is-complete"><span>07</span><div><b>比较三个表达方案</b><small>已完成　老师已反馈</small></div><strong>完成</strong></article>
+          <article class="is-current"><span>08</span><div><b>让观点被看见</b><small>当前课程　作业待提交</small></div><strong>进行中</strong></article>
+          <article><span>09</span><div><b>把反馈变成下一版</b><small>完成第8课后解锁</small></div><strong>未开始</strong></article>
+        </div>
+      </section>
+
+      <section class="community-panel" data-student-panel="events">
+        <div class="community-page-head"><div><h1>活动</h1><p>参与开放日、作品展和亲子共创。</p></div></div>
+        <div class="event-feature">
+          <img src="https://picsum.photos/seed/budstar-family-workshop/1400/900" alt="家长与孩子共同参与创作活动" />
+          <div><time datetime="2026-07-25">7月25日　19:30</time><h2>暑期作品分享夜</h2><p>孩子展示项目，老师讲解学习过程，家长现场交流。</p><button type="button" data-open-dialog="event-booking" data-event-title="暑期作品分享夜" data-event-time="7月25日 19:30" data-event-detail="孩子展示项目，老师讲解学习过程。">登记参加</button></div>
+        </div>
+        <div class="event-list">
+          <article><time datetime="2026-07-18"><b>18</b><span>7月</span></time><div><h3>99元AI体验课</h3><p>14:00　线下空间　剩余2席</p></div><button type="button" data-open-dialog="event-booking" data-event-title="99元AI体验课" data-event-time="7月18日 14:00" data-event-detail="1课时到店体验，现场完成小作品。">预约</button></article>
+          <article><time datetime="2026-08-02"><b>02</b><span>8月</span></time><div><h3>AI亲子共创营</h3><p>16:00　家长与孩子共同完成作品</p></div><button type="button" data-open-dialog="event-booking" data-event-title="AI亲子共创营" data-event-time="8月2日 16:00" data-event-detail="家长与孩子共同完成一件AI作品。">查看</button></article>
+        </div>
+        <section class="parent-course-window">
+          <div class="community-section-head"><h2>全部课程与活动</h2><span>家长可预约</span></div>
+          <div><article><span>体验</span><h3>99元AI体验课</h3><p>1课时，到店完成小作品。</p><b>99元</b><button type="button" data-open-dialog="event-booking" data-event-title="99元AI体验课" data-event-time="可预约时段" data-event-detail="1课时到店体验，现场完成小作品。">预约</button></article><article><span>系统课</span><h3>AI学期课</h3><p>16节线下课与8节答疑。</p><b>4480元</b><button type="button" data-open-dialog="event-booking" data-event-title="AI学期课" data-event-time="2个月" data-event-detail="16节线下课与8节答疑，共24课时。">咨询</button></article><article><span>亲子</span><h3>AI亲子共创营</h3><p>家长和孩子共同完成作品。</p><b>980元</b><button type="button" data-open-dialog="event-booking" data-event-title="AI亲子共创营" data-event-time="假期场次" data-event-detail="家长与孩子共同完成一件AI作品。">查看场次</button></article></div>
+        </section>
+      </section>
+
+      <section class="community-panel" data-student-panel="homework" data-student-only>
+        <div class="community-page-head"><div><h1>本课作业</h1><p>提交作品，老师会用AI辅助批改并亲自确认。</p></div><button class="community-primary" type="button" data-open-dialog="homework-upload">上传作业</button></div>
+        <div class="student-homework-layout">
+          <section class="student-task-card">
+            <span>第8课任务</span><h2>城市观察表达</h2><p>选择一个真实问题，提交一张作品图或作品链接，并用两句话说明你为什么这样表达。</p>
+            <div><b>提交要求</b><ul><li>作品标题</li><li>作品图片或链接</li><li>创作说明</li></ul></div>
+          </section>
+          <aside class="student-submit-state" data-homework-state>
+            <span>当前状态</span><h3>还没有提交</h3><p>完成后从这里上传，老师和家长会看到同一份作品。</p><button type="button" data-open-dialog="homework-upload">开始提交</button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="community-panel" data-student-panel="messages">
+        <div class="community-page-head"><div><h1>消息中心</h1><p>只收纳与你有关的学习提醒、老师反馈和活动通知。</p></div></div>
+        <div class="notification-center">
+          <div class="notification-toolbar"><div><b>全部消息</b><small>2 条未读</small></div><button type="button" data-admin-action="全部标为已读">全部已读</button></div>
+          <article class="notification-card is-unread" data-student-only><span class="notification-icon">作业</span><div><div><b>第 8 课作业今天截止</b><time>今天 18:00</time></div><p>请完成作品预览并提交，提交后老师会自动批改与标注。</p><button type="button" data-student-tab-jump="homework">去交作业</button></div></article>
+          <article class="notification-card is-unread" data-parent-only><span class="notification-icon">反馈</span><div><div><b>老师更新了作品反馈</b><time>今天 16:48</time></div><p>《城市里的安静角落》已完成点评，重点关注观点表达与比较思路。</p><button type="button" data-student-tab-jump="child">查看反馈</button></div></article>
+          <article class="notification-card"><span class="notification-icon">课程</span><div><div><b>第 9 课学习任务已发布</b><time>昨天</time></div><p>下次课将继续完善作品标题，并准备 1 分钟项目介绍。</p><button type="button" data-student-tab-jump="courses" data-student-only>查看任务</button><button type="button" data-student-tab-jump="child" data-parent-only>查看进度</button></div></article>
+          <article class="notification-card" data-parent-only><span class="notification-icon">活动</span><div><div><b>暑期作品分享夜开放登记</b><time>7月25日 19:30</time></div><p>孩子现场展示项目，家长可到店观看并了解本阶段成长。</p><button type="button" data-open-dialog="event-booking" data-event-title="暑期作品分享夜" data-event-time="7月25日 19:30" data-event-detail="孩子展示项目，家长到店观看。">登记参加</button></div></article>
+        </div>
+      </section>
+
+      <section class="community-panel" data-student-panel="profile">
+        <div class="community-page-head"><div><h1>我的</h1><p>管理家庭成员、预约和隐私设置。</p></div></div>
+        <div class="profile-layout">
+          <section class="profile-person"><span class="community-avatar is-parent is-large" data-profile-avatar>周</span><div><h2 data-profile-name>周女士</h2><p data-profile-summary>已绑定 1 个孩子</p></div><button type="button" data-open-dialog="consumer-role-switch">切换身份</button></section>
+          <section class="profile-groups" data-parent-profile>
+            <article><h2>家庭成员</h2><button type="button" data-open-dialog="family-code"><span><b>李沐辰</b><small>AI星芽种子实验班　已绑定</small></span><strong>管理</strong></button><button type="button" data-open-dialog="family-code"><span><b>绑定另一个孩子</b><small>使用家庭查看码</small></span><strong>添加</strong></button></article>
+            <article><h2>预约记录</h2><button type="button" data-open-dialog="event-booking" data-event-title="暑期作品分享夜" data-event-time="7月25日 19:30" data-event-detail="已登记，活动当天请提前10分钟到店。"><span><b>暑期作品分享夜</b><small>7月25日 19:30　待参加</small></span><strong>详情</strong></button></article>
+            <article><h2>账户与隐私</h2><button type="button" data-admin-action="更新消息通知"><span><b>消息通知</b><small>老师回复和活动提醒已开启</small></span><strong>设置</strong></button><button type="button" data-consumer-logout><span><b>退出登录</b><small>返回首页</small></span><strong>退出</strong></button></article>
+          </section>
+          <section class="profile-groups" data-student-profile hidden>
+            <article><h2>学习账号</h2><button type="button" data-student-tab-jump="courses"><span><b>AI星芽种子实验班</b><small>当前第8课　课程进行中</small></span><strong>查看</strong></button><button type="button" data-student-tab-jump="homework"><span><b>我的作业</b><small>1份作业等待老师确认</small></span><strong>进入</strong></button></article>
+            <article><h2>账户设置</h2><button type="button" data-admin-action="更新消息通知"><span><b>学习提醒</b><small>上课和老师反馈提醒已开启</small></span><strong>设置</strong></button><button type="button" data-consumer-logout><span><b>退出登录</b><small>返回首页</small></span><strong>退出</strong></button></article>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="portal-dialog" data-dialog="class-story" hidden><div class="portal-dialog-panel community-dialog-wide"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>课堂动态</h2><img class="community-dialog-image" src="assets/community-classroom.jpg" alt="孩子们在课堂讨论作品" /><p>孩子们先观察生活中的问题，再用AI工具完成表达。老师会在作品发布前确认内容。</p><div class="community-comments"><article><b>陈予安妈妈</b><p>孩子回家还在继续讨论这个问题。</p></article><article><b>林老师</b><p>下一节课会把观察整理成更完整的作品。</p></article></div><form class="community-comment-form" data-comment-form><input aria-label="留言" placeholder="写下留言" /><button type="submit">发送</button></form></div></div>
+    <div class="portal-dialog" data-dialog="work-story" hidden><div class="portal-dialog-panel community-dialog-wide"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2 data-work-title>城市噪音观察海报</h2><img class="community-dialog-image" data-work-image src="assets/community-noise-poster.jpg" alt="城市噪音观察主题学生作品" /><div class="community-work-meta"><span data-work-lesson>第8课</span><span>老师已确认</span><span>家庭可见</span></div><h3>孩子怎么想</h3><p data-work-thought>我发现不同地方的声音不一样。我想让大家看到，安静的空间也很重要。</p><h3>老师反馈</h3><p data-work-feedback>观察具体，画面也有清楚的对比。下一步可以让标题更直接。</p></div></div>
+    <div class="portal-dialog" data-dialog="growth-report" hidden><div class="portal-dialog-panel community-dialog-wide"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>第8课成长报告</h2><p>沐辰已经能从生活问题出发，比较多个方案，并说明自己的选择。</p><p class="community-published-note" data-report-published-note hidden>林老师刚刚完成确认，报告已同步到家庭。</p><div class="growth-summary"><article><b>提问</b><p>开始围绕作品目标提出问题。</p></article><article><b>表达</b><p>能说明素材和画面的选择。</p></article><article><b>迭代</b><p>愿意根据反馈继续修改。</p></article></div><button type="button" data-student-tab-jump="messages" data-close-dialog>联系老师</button></div></div>
+    <div class="portal-dialog" data-dialog="portfolio" hidden><div class="portal-dialog-panel community-dialog-wide"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>沐辰的作品集</h2><p>已完成8件作品。所有内容均由老师确认后对家庭开放。</p><div class="portfolio-mini-grid"><button type="button" data-open-dialog="work-story" data-work-title="城市噪音观察海报" data-work-image="assets/community-noise-poster.jpg" data-work-lesson="第8课" data-work-thought="我想让大家看到，安静的空间也很重要。" data-work-feedback="观察具体，下一步可以让标题更直接。"><img src="assets/community-noise-poster.jpg" alt="城市噪音观察海报" /><b>城市噪音观察海报</b></button><button type="button" data-open-dialog="work-story" data-work-title="我的AI故事角色" data-work-image="https://picsum.photos/seed/budstar-story-character/800/600" data-work-lesson="第6课" data-work-thought="我设计了一个会收集城市故事的角色。" data-work-feedback="人物目标很清楚，可以再补充一次选择与修改。"><img src="https://picsum.photos/seed/budstar-story-character/800/600" alt="AI故事角色作品" /><b>我的AI故事角色</b></button><button type="button" data-open-dialog="work-story" data-work-title="家庭旅行助手" data-work-image="https://picsum.photos/seed/budstar-travel-helper/800/600" data-work-lesson="第4课" data-work-thought="我想帮助家人更快比较适合周末的路线。" data-work-feedback="问题真实，下一步把不同家庭成员的需要分开表达。"><img src="https://picsum.photos/seed/budstar-travel-helper/800/600" alt="家庭旅行助手作品" /><b>家庭旅行助手</b></button></div></div></div>
+    <div class="portal-dialog" data-dialog="event-booking" hidden><div class="portal-dialog-panel"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2 data-event-heading>登记参加</h2><p><b data-event-name>暑期作品分享夜</b>，<span data-event-copy>7月25日 19:30，孩子展示项目，家长到店观看。</span></p><form class="community-booking-form" data-booking-form><label>家长姓名<input value="周女士" /></label><label>联系电话<input value="138 0000 2026" /></label><label>参加人数<select><option>1位家长</option><option>2位家长</option></select></label><button type="submit">确认登记</button></form></div></div>
+    <div class="portal-dialog" data-dialog="family-code" hidden><div class="portal-dialog-panel"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>家庭查看码</h2><p>查看码由星芽AI提供，用于连接孩子的成长档案。</p><label>查看码<input value="XY-4829" /></label><button type="button" data-close-on-action data-admin-action="家庭查看码已绑定">确认绑定</button></div></div>
+    <div class="portal-dialog" data-dialog="account-settings" hidden><div class="portal-dialog-panel"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>编辑资料</h2><label>称呼<input value="周女士" /></label><label>手机号<input value="138 0000 2026" /></label><button type="button" data-close-on-action data-admin-action="账户资料已保存">保存</button></div></div>
+    <div class="portal-dialog" data-dialog="notifications" hidden><div class="portal-dialog-panel"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>通知</h2><div class="notification-list"><p><b>林老师回复了你的留言</b><span>6分钟前</span></p><p><b>沐辰的第8课作品已发布</b><span>今天 16:42</span></p></div></div></div>
+    <div class="portal-dialog" data-dialog="consumer-role-switch" hidden><div class="portal-dialog-panel"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>切换身份</h2><p>学生提交作业，家长查看作品和成长反馈。</p><div class="consumer-role-buttons"><button type="button" data-community-role="student"><b>我是学生</b><span>课程、作业和AI老师</span></button><button type="button" data-community-role="parent"><b>我是家长</b><span>动态、作品和成长反馈</span></button></div></div></div>
+    <div class="portal-dialog" data-dialog="homework-upload" hidden><div class="portal-dialog-panel community-dialog-wide"><button type="button" class="portal-dialog-close" data-close-dialog>关闭</button><h2>上传第8课作业</h2><form class="community-booking-form" data-homework-form><label>作品标题<input name="title" value="城市里的安静角落" required /></label><label>作品链接<input name="link" type="url" value="https://example.com/my-work" required /></label><label>作品文件<input name="file" type="file" accept="image/*,.pdf" /></label><label>创作说明<textarea name="description" required>我比较了公园和马路的声音，希望大家关注城市里的安静空间。</textarea></label><div class="homework-preview" data-homework-preview-panel hidden><span>提交预览</span><h3 data-preview-title></h3><a data-preview-link target="_blank" rel="noreferrer"></a><p data-preview-description></p></div><div class="homework-form-actions"><button type="button" data-homework-preview>预览</button><button type="submit">确认提交</button></div></form></div></div>
+    <div class="toast" data-toast hidden></div>
+    <script src="script.js?v=20260712-11"></script>
+  </body>
+</html>
