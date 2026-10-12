@@ -32,6 +32,14 @@ export const switchConsumerIdentitySchema = z.object({
   identity: z.enum(consumerIdentities),
 });
 
+export const wechatCodeLoginSchema = z.object({
+  code: z.string().min(1).max(512),
+});
+
+export const wechatBindPhoneSchema = z.object({
+  code: z.string().min(1).max(512),
+});
+
 export const campusContextSchema = z.object({
   campusId: z.string().min(1).max(64),
 });

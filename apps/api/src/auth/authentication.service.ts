@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   createHmac,
@@ -45,6 +45,7 @@ type Account = {
   studentProfileId?: string;
   activeIdentity?: ConsumerIdentity;
   activeStudentBindings?: string[];
+  wxOpenid?: string;
 };
 
 /** Local/dev fixtures when LOCAL_AUTH_ACCOUNTS_JSON is unset. Never used in production. */
@@ -108,6 +109,8 @@ export type IssuedAuthenticatedSession = AuthenticatedSession & {
 @Injectable()
 export class AuthenticationService {
   private readonly accounts = new Map<string, Account>();
+  /** ADR-0006：微信 openid → 账号 ID 索引（手机号绑定后指向合并账号）。 */
+  private readonly wxOpenidIndex = new Map<string, string>();
   private readonly tokenSecret: string;
 
   constructor(
@@ -179,6 +182,96 @@ export class AuthenticationService {
       account.studentProfileId = randomUUID();
     }
     return this.issueSession(account);
+  }
+
+  /**
+   * ADR-0006：微信登录为身份底座——openid 确定性建号/取号，
+   * 免手机号即可浏览官网内容与提交预约线索；家庭内容需再绑定手机号。
+   */
+  async loginWechat(code: string): Promise<IssuedAuthenticatedSession> {
+    await this.assertAttemptAllowed('wechat-login', 60, 5 * 60_000);
+    const resolver = this.adapters.wechatCodeResolver;
+    if (!resolver) {
+      throw new ApiException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        'WECHAT_NOT_CONFIGURED',
+        '微信登录未配置',
+      );
+    }
+    const { openid } = await resolver.code2session(code);
+    const existing = this.wxOpenidIndex.get(openid);
+    const account = existing
+      ? this.requireActive(existing)
+      : this.createWechatAccount(openid);
+    account.activeIdentity = 'parent';
+    return this.issueSession(account);
+  }
+
+  /**
+   * ADR-0006：微信手机号绑定——仅用于匹配既有手机号账号（家庭绑定钥匙），
+   * 合并后不赋予任何员工能力。
+   */
+  async bindWechatPhone(
+    accessToken: string,
+    code: string,
+  ): Promise<IssuedAuthenticatedSession> {
+    const resolver = this.adapters.wechatPhoneNumberResolver;
+    if (!resolver) {
+      throw new ApiException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        'WECHAT_NOT_CONFIGURED',
+        '微信手机号解析未配置',
+      );
+    }
+    const payload = this.verifyAccessToken(accessToken);
+    const current = this.requireActive(payload.sub);
+    if (!(await this.sessions.isActive(payload.sid, payload.sub, new Date()))) {
+      throw this.unauthorized();
+    }
+    const { phoneNumber } = await resolver.getPhoneNumber(code);
+    const phoneAccountId = `parent-${this.digest(phoneNumber).slice(0, 24)}`;
+    let target = this.accounts.get(phoneAccountId);
+    if (!target) {
+      target = {
+        id: phoneAccountId,
+        kind: 'parent',
+        loginIdentifier: `phone:${this.digest(phoneNumber)}`,
+        displayName: '家长用户',
+        status: 'ACTIVE',
+        parentProfileId: randomUUID(),
+        wxOpenid: current.wxOpenid,
+        activeIdentity: 'parent',
+        activeStudentBindings: [],
+      };
+      this.accounts.set(phoneAccountId, target);
+    }
+    if (current.wxOpenid) {
+      target.wxOpenid = current.wxOpenid;
+      this.wxOpenidIndex.set(current.wxOpenid, phoneAccountId);
+    }
+    if (!target.parentProfileId) {
+      target.parentProfileId = randomUUID();
+    }
+    target.activeIdentity = 'parent';
+    return this.issueSession(target);
+  }
+
+  private createWechatAccount(openid: string): Account {
+    const accountId = `wx-${this.digest(openid).slice(0, 24)}`;
+    const account: Account = {
+      id: accountId,
+      kind: 'parent',
+      loginIdentifier: `wechat:${openid}`,
+      displayName: '微信用户',
+      status: 'ACTIVE',
+      parentProfileId: randomUUID(),
+      wxOpenid: openid,
+      activeIdentity: 'parent',
+      activeStudentBindings: [],
+    };
+    this.accounts.set(accountId, account);
+    this.wxOpenidIndex.set(openid, accountId);
+    return account;
   }
 
   /**

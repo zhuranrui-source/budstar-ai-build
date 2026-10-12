@@ -6,6 +6,8 @@ import type {
   SecondFactorVerifier,
   VerificationCodeSender,
   VerificationCodeStore,
+  WechatIdentityResolver,
+  WechatPhoneNumberResolver,
 } from './authentication-boundaries';
 
 export type ProductionAuthenticationAdapterConfig = {
@@ -20,6 +22,10 @@ export type ProductionAuthenticationAdapterConfig = {
   secondFactor?: {
     verifyUrl: string;
     bearerToken: string;
+  };
+  wechatMiniapp?: {
+    appId: string;
+    appSecret: string;
   };
 };
 
@@ -37,7 +43,17 @@ export function productionAuthenticationAdapterConfig(
     environment.SECOND_FACTOR_VERIFY_URL,
     environment.SECOND_FACTOR_BEARER_TOKEN,
   ];
+  const wechatValues = [
+    environment.WECHAT_MINIAPP_APP_ID,
+    environment.WECHAT_MINIAPP_APP_SECRET,
+  ];
   return {
+    wechatMiniapp: wechatValues.every(Boolean)
+      ? {
+          appId: wechatValues[0]!,
+          appSecret: wechatValues[1]!,
+        }
+      : undefined,
     tencentSms: smsValues.every(Boolean)
       ? {
           secretId: smsValues[0]!,
@@ -64,6 +80,7 @@ export function createProductionAuthenticationAdapters(
   const missing = [
     ...(config.tencentSms ? [] : ['tencent-sms']),
     ...(config.secondFactor ? [] : ['second-factor']),
+    ...(config.wechatMiniapp ? [] : ['wechat-miniapp']),
   ];
   return {
     verificationCodeSender: config.tencentSms
@@ -73,6 +90,12 @@ export function createProductionAuthenticationAdapters(
     secondFactorVerifier: config.secondFactor
       ? new HttpSecondFactorVerifier(config.secondFactor)
       : unavailableSecondFactor(),
+    wechatCodeResolver: config.wechatMiniapp
+      ? new WechatHttpResolver(config.wechatMiniapp)
+      : unavailableWechatResolver(),
+    wechatPhoneNumberResolver: config.wechatMiniapp
+      ? new WechatHttpResolver(config.wechatMiniapp)
+      : unavailableWechatResolver(),
     readiness: () => ({
       ready: missing.length === 0,
       degradedReasons: missing.map((name) => `${name}-not-configured`),
@@ -208,6 +231,84 @@ function unavailable(): ApiException {
     'SERVICE_UNAVAILABLE',
     '认证服务尚未完成生产配置',
   );
+}
+
+class WechatHttpResolver {
+  constructor(
+    private readonly config: NonNullable<
+      ProductionAuthenticationAdapterConfig['wechatMiniapp']
+    >,
+  ) {}
+
+  async code2session(
+    code: string,
+  ): Promise<{ openid: string; unionid?: string }> {
+    const url =
+      'https://api.weixin.qq.com/sns/jscode2session' +
+      `?appid=${encodeURIComponent(this.config.appId)}` +
+      `&secret=${encodeURIComponent(this.config.appSecret)}` +
+      `&js_code=${encodeURIComponent(code)}&grant_type=authorization_code`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+    const result = (await response.json()) as {
+      openid?: string;
+      unionid?: string;
+    };
+    if (!response.ok || !result.openid) {
+      throw new Error('微信 code2session 失败');
+    }
+    return { openid: result.openid, unionid: result.unionid };
+  }
+
+  async getPhoneNumber(code: string): Promise<{ phoneNumber: string }> {
+    const tokenResponse = await fetch(
+      'https://api.weixin.qq.com/cgi-bin/token' +
+        `?grant_type=client_credential&appid=${encodeURIComponent(this.config.appId)}` +
+        `&secret=${encodeURIComponent(this.config.appSecret)}`,
+      { signal: AbortSignal.timeout(5_000) },
+    );
+    const tokenResult = (await tokenResponse.json()) as {
+      access_token?: string;
+    };
+    if (!tokenResult.access_token) {
+      throw new Error('微信 access_token 获取失败');
+    }
+    const response = await fetch(
+      `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${tokenResult.access_token}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+        signal: AbortSignal.timeout(5_000),
+      },
+    );
+    const result = (await response.json()) as {
+      phone_info?: { phoneNumber?: string };
+    };
+    if (!result.phone_info?.phoneNumber) {
+      throw new Error('微信手机号解析失败');
+    }
+    return { phoneNumber: result.phone_info.phoneNumber };
+  }
+}
+
+function unavailableWechatResolver(): WechatIdentityResolver &
+  WechatPhoneNumberResolver {
+  return {
+    code2session: () => {
+      throw new ApiException(
+        503,
+        'WECHAT_NOT_CONFIGURED',
+        '微信登录尚未完成生产配置',
+      );
+    },
+    getPhoneNumber: () => {
+      throw new ApiException(
+        503,
+        'WECHAT_NOT_CONFIGURED',
+        '微信登录尚未完成生产配置',
+      );
+    },
+  };
 }
 
 function hash(value: string): string {

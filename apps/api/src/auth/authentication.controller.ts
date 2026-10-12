@@ -3,6 +3,8 @@ import type { Response } from 'express';
 import {
   parentOtpRequestSchema,
   parentOtpVerifySchema,
+  wechatBindPhoneSchema,
+  wechatCodeLoginSchema,
   passwordLoginSchema,
   secondFactorSchema,
   switchConsumerIdentitySchema,
@@ -101,6 +103,31 @@ export class AuthenticationController {
           'platform-admin',
         ),
       false,
+    );
+  }
+
+  @Post('wechat/login')
+  @Public()
+  async loginWechat(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: unknown,
+  ) {
+    const input = this.parse(wechatCodeLoginSchema, body);
+    return this.withLoginAudit(
+      () => this.authentication.loginWechat(input.code),
+      false,
+    );
+  }
+
+  @Post('wechat/bind-phone')
+  async bindWechatPhone(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: unknown,
+  ) {
+    const input = this.parse(wechatBindPhoneSchema, body);
+    return this.authentication.bindWechatPhone(
+      request.headers.authorization?.replace(/^Bearer\s+/i, '') ?? '',
+      input.code,
     );
   }
 

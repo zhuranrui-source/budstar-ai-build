@@ -1,0 +1,24 @@
+{
+  "name": "@budstar/miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BudStar 家庭视图微信小程序（Taro + React，ADR-0006/0007）",
+  "scripts": {
+    "build:weapp": "taro build --type weapp",
+    "dev:weapp": "taro build --type weapp --watch"
+  },
+  "dependencies": {
+    "@budstar/contracts": "workspace:*",
+    "@tarojs/components": "4.1.2",
+    "@tarojs/runtime": "4.1.2",
+    "@tarojs/taro": "4.1.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tarojs/cli": "4.1.2",
+    "@tarojs/plugin-platform-weapp": "4.1.2",
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}
