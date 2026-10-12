@@ -44,6 +44,11 @@ export function OpsShell({
     ? [
         { key: 'desk' as const, href: '/', label: '工作台' },
         { key: 'platform' as const, href: '/platform', label: '数据浏览器' },
+        {
+          key: 'subject-courses' as const,
+          href: '/platform/subject-courses',
+          label: '学科内容库',
+        },
       ]
     : STAFF_NAV;
 

@@ -14,6 +14,7 @@ import { CommunityModule } from './community/community.module';
 import { PlatformModule } from './platform/platform.module';
 import { ObjectStorageModule } from './object-storage/object-storage.module';
 import { SubmissionsModule } from './submissions/submissions.module';
+import { SubjectCoursesModule } from './subject-courses/subject-courses.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SubmissionsModule } from './submissions/submissions.module';
     PlatformModule,
     ObjectStorageModule,
     SubmissionsModule,
+    SubjectCoursesModule,
     AiTeacherModule,
   ],
   controllers: [AppController],

@@ -373,7 +373,7 @@ export default function FamilyPortalPage() {
               </>
             )}
 
-            <div className="community-section-head" style={{ marginTop: 28 }}>
+            <div className="community-section-head">
               <h2>课节与作品（亲子共学）</h2>
             </div>
             {learningError && <p role="alert">{learningError}</p>}
@@ -428,6 +428,14 @@ export default function FamilyPortalPage() {
                 </ul>
               </>
             )}
+
+            <div className="community-section-head" style={{ marginTop: 28 }}>
+              <h2>学科内容（小学/初中）</h2>
+            </div>
+            <p role="status">
+              学科内容库接入中：数学、语文等各学科 AI
+              理解课将按孩子的年级出现在这里。
+            </p>
           </section>
 
           <section className="growth-timeline">

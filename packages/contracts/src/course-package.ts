@@ -113,3 +113,81 @@ export const coursePackageVersionSummarySchema = z
 export type CoursePackageVersionSummary = z.infer<
   typeof coursePackageVersionSummarySchema
 >;
+
+// ===== 学科内容库（ADR-0003 不可变精神：DRAFT 可编辑，PUBLISHED 单向不可改） =====
+
+export const subjectOptions = [
+  'MATH',
+  'CHINESE',
+  'ENGLISH',
+  'PHYSICS',
+  'CHEMISTRY',
+  'BIOLOGY',
+  'HISTORY',
+  'GEOGRAPHY',
+  'POLITICS',
+  'OTHER',
+] as const;
+export const subjectSchema = z.enum(subjectOptions);
+
+export const gradeBandOptions = ['PRIMARY', 'JUNIOR_HIGH'] as const;
+export const gradeBandSchema = z.enum(gradeBandOptions);
+
+export const subjectCourseStatuses = ['DRAFT', 'PUBLISHED'] as const;
+export const subjectCourseStatusSchema = z.enum(subjectCourseStatuses);
+
+export const subjectChapterDraftSchema = z
+  .object({
+    sequence: z.number().int().min(1).max(200),
+    title: z.string().trim().min(1).max(200),
+    contentHtml: z.string().max(500_000),
+    aiGuidePrompt: z.string().trim().max(1000).optional(),
+  })
+  .strict();
+
+export const createSubjectCourseSchema = z
+  .object({
+    subject: subjectSchema,
+    gradeBand: gradeBandSchema,
+    gradeLevel: z.number().int().min(1).max(9),
+    title: z.string().trim().min(1).max(200),
+    chapters: z.array(subjectChapterDraftSchema).min(1).max(200),
+  })
+  .strict();
+
+export const subjectChapterViewSchema = z
+  .object({
+    id: z.string().uuid(),
+    sequence: z.number().int(),
+    title: z.string(),
+    contentHtml: z.string(),
+    aiGuidePrompt: z.string().nullable(),
+  })
+  .strict();
+
+export const subjectCourseSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    subject: subjectSchema,
+    gradeBand: gradeBandSchema,
+    gradeLevel: z.number().int(),
+    title: z.string(),
+    status: subjectCourseStatusSchema,
+    publishedAt: z.string().datetime().nullable(),
+    chapterCount: z.number().int(),
+  })
+  .strict();
+
+export const subjectCourseDetailSchema = subjectCourseSummarySchema.extend({
+  chapters: z.array(subjectChapterViewSchema),
+});
+
+export type Subject = z.infer<typeof subjectSchema>;
+export type GradeBand = z.infer<typeof gradeBandSchema>;
+export type SubjectCourseStatus = z.infer<typeof subjectCourseStatusSchema>;
+export type SubjectChapterDraft = z.infer<typeof subjectChapterDraftSchema>;
+export type CreateSubjectCourseInput = z.infer<
+  typeof createSubjectCourseSchema
+>;
+export type SubjectCourseSummary = z.infer<typeof subjectCourseSummarySchema>;
+export type SubjectCourseDetail = z.infer<typeof subjectCourseDetailSchema>;

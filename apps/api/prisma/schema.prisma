@@ -384,6 +384,38 @@ model PublicRateLimitBucket {
   @@index([resetAt])
 }
 
+enum SubjectCourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model SubjectCourse {
+  id          String              @id @default(uuid()) @db.Uuid
+  subject     String              @db.VarChar(32)
+  gradeBand   String              @db.VarChar(16)
+  gradeLevel  Int
+  title       String              @db.VarChar(200)
+  status      SubjectCourseStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  chapters    SubjectChapter[]
+
+  @@index([subject, gradeBand, gradeLevel, status])
+}
+
+model SubjectChapter {
+  id              String       @id @default(uuid()) @db.Uuid
+  subjectCourseId String       @db.Uuid
+  sequence        Int
+  title           String       @db.VarChar(200)
+  contentHtml     String       @db.Text
+  aiGuidePrompt   String?      @db.VarChar(1000)
+  subjectCourse   SubjectCourse @relation(fields: [subjectCourseId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectCourseId, sequence])
+}
+
 model CoursePackageVersion {
   id               String                     @id @default(uuid()) @db.Uuid
   packageKey       String                     @db.VarChar(64)

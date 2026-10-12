@@ -613,4 +613,47 @@ export class AdminApiClient {
     }
     return body as T;
   }
+  // ===== 学科内容库（平台治理；ADR-0009 内容只对合作方/家庭只读发布） =====
+
+  async listSubjectCourses(): Promise<
+    Array<{
+      id: string;
+      subject: string;
+      gradeBand: string;
+      gradeLevel: number;
+      title: string;
+      status: string;
+      publishedAt: string | null;
+      chapterCount: number;
+    }>
+  > {
+    return this.authenticatedRequest('/platform/subject-courses');
+  }
+
+  async createSubjectCourse(input: {
+    subject: string;
+    gradeBand: string;
+    gradeLevel: number;
+    title: string;
+    chapters: Array<{
+      sequence: number;
+      title: string;
+      contentHtml: string;
+      aiGuidePrompt?: string;
+    }>;
+  }) {
+    return this.authenticatedRequest('/platform/subject-courses', undefined, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+  }
+
+  async publishSubjectCourse(id: string) {
+    return this.authenticatedRequest(
+      `/platform/subject-courses/${id}/publish`,
+      undefined,
+      { method: 'POST' },
+    );
+  }
 }
