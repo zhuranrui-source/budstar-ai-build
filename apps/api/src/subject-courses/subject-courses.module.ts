@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 import { PrismaSubjectCourseStore } from './prisma-subject-courses.store';
 import { PartnerSubjectCoursesController } from './partner-subject-courses.controller';
 import { PlatformSubjectCoursesController } from './platform-subject-courses.controller';
+import { SubjectCourseStaticController } from './subject-course-static.controller';
 import {
   InMemorySubjectCourseStore,
   SubjectCoursesService,
@@ -17,6 +18,7 @@ export const SUBJECT_COURSE_STORE = Symbol('SUBJECT_COURSE_STORE');
   controllers: [
     PlatformSubjectCoursesController,
     PartnerSubjectCoursesController,
+    SubjectCourseStaticController,
   ],
   providers: [
     {

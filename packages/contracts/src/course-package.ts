@@ -130,7 +130,12 @@ export const subjectOptions = [
 ] as const;
 export const subjectSchema = z.enum(subjectOptions);
 
-export const gradeBandOptions = ['PRIMARY', 'JUNIOR_HIGH'] as const;
+export const gradeBandOptions = [
+  'PRIMARY',
+  'JUNIOR_HIGH',
+  'SENIOR_HIGH',
+  'GENERAL',
+] as const;
 export const gradeBandSchema = z.enum(gradeBandOptions);
 
 export const subjectCourseStatuses = ['DRAFT', 'PUBLISHED'] as const;
@@ -141,6 +146,7 @@ export const subjectChapterDraftSchema = z
     sequence: z.number().int().min(1).max(200),
     title: z.string().trim().min(1).max(200),
     contentHtml: z.string().max(500_000),
+    contentUrl: z.string().trim().max(1000).optional(),
     aiGuidePrompt: z.string().trim().max(1000).optional(),
   })
   .strict();
@@ -149,7 +155,7 @@ export const createSubjectCourseSchema = z
   .object({
     subject: subjectSchema,
     gradeBand: gradeBandSchema,
-    gradeLevel: z.number().int().min(1).max(9),
+    gradeLevel: z.number().int().min(1).max(12).nullable().optional(),
     title: z.string().trim().min(1).max(200),
     chapters: z.array(subjectChapterDraftSchema).min(1).max(200),
   })
@@ -161,6 +167,7 @@ export const subjectChapterViewSchema = z
     sequence: z.number().int(),
     title: z.string(),
     contentHtml: z.string(),
+    contentUrl: z.string().nullable(),
     aiGuidePrompt: z.string().nullable(),
   })
   .strict();
@@ -170,7 +177,7 @@ export const subjectCourseSummarySchema = z
     id: z.string().uuid(),
     subject: subjectSchema,
     gradeBand: gradeBandSchema,
-    gradeLevel: z.number().int(),
+    gradeLevel: z.number().int().nullable(),
     title: z.string(),
     status: subjectCourseStatusSchema,
     publishedAt: z.string().datetime().nullable(),

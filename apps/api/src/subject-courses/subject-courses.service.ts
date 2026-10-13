@@ -15,6 +15,7 @@ export type SubjectChapterRecord = {
   sequence: number;
   title: string;
   contentHtml: string;
+  contentUrl: string | null;
   aiGuidePrompt: string | null;
 };
 
@@ -22,7 +23,7 @@ export type SubjectCourseRecord = {
   id: string;
   subject: string;
   gradeBand: string;
-  gradeLevel: number;
+  gradeLevel: number | null;
   title: string;
   status: SubjectCourseStatus;
   publishedAt: Date | null;
@@ -41,14 +42,17 @@ export class InMemorySubjectCourseStore implements SubjectCourseStore {
   private readonly courses = new Map<string, SubjectCourseRecord>();
 
   async save(course: SubjectCourseRecord): Promise<void> {
+    await Promise.resolve();
     this.courses.set(course.id, structuredClone(course));
   }
 
   async findById(id: string): Promise<SubjectCourseRecord | null> {
+    await Promise.resolve();
     return this.courses.get(id) ?? null;
   }
 
   async list(): Promise<SubjectCourseRecord[]> {
+    await Promise.resolve();
     return [...this.courses.values()].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
     );
@@ -68,7 +72,7 @@ export class SubjectCoursesService {
       id,
       subject: input.subject,
       gradeBand: input.gradeBand,
-      gradeLevel: input.gradeLevel,
+      gradeLevel: input.gradeLevel ?? null,
       title: input.title,
       status: 'DRAFT',
       publishedAt: null,
@@ -102,6 +106,7 @@ export class SubjectCoursesService {
       .filter(
         (record) =>
           filter?.gradeLevel === undefined ||
+          filter?.gradeLevel === null ||
           record.gradeLevel === filter.gradeLevel,
       )
       .map((record) => this.toSummary(record));
@@ -185,6 +190,7 @@ export class SubjectCoursesService {
       sequence: chapter.sequence,
       title: chapter.title,
       contentHtml: chapter.contentHtml,
+      contentUrl: chapter.contentUrl ?? null,
       aiGuidePrompt: chapter.aiGuidePrompt ?? null,
     };
   }
@@ -212,6 +218,7 @@ export class SubjectCoursesService {
           sequence: chapter.sequence,
           title: chapter.title,
           contentHtml: chapter.contentHtml,
+          contentUrl: chapter.contentUrl,
           aiGuidePrompt: chapter.aiGuidePrompt,
         })),
     };

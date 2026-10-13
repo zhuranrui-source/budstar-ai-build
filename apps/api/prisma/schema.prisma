@@ -393,7 +393,7 @@ model SubjectCourse {
   id          String              @id @default(uuid()) @db.Uuid
   subject     String              @db.VarChar(32)
   gradeBand   String              @db.VarChar(16)
-  gradeLevel  Int
+  gradeLevel  Int?
   title       String              @db.VarChar(200)
   status      SubjectCourseStatus @default(DRAFT)
   publishedAt DateTime?
@@ -410,6 +410,7 @@ model SubjectChapter {
   sequence        Int
   title           String       @db.VarChar(200)
   contentHtml     String       @db.Text
+  contentUrl      String?      @db.VarChar(1000)
   aiGuidePrompt   String?      @db.VarChar(1000)
   subjectCourse   SubjectCourse @relation(fields: [subjectCourseId], references: [id], onDelete: Cascade)
 

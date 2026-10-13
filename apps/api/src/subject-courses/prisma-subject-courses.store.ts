@@ -29,6 +29,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
             sequence: chapter.sequence,
             title: chapter.title,
             contentHtml: chapter.contentHtml,
+            contentUrl: chapter.contentUrl,
             aiGuidePrompt: chapter.aiGuidePrompt,
           })),
         },
@@ -74,7 +75,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
     id: string;
     subject: string;
     gradeBand: string;
-    gradeLevel: number;
+    gradeLevel: number | null;
     title: string;
     status: SubjectCourseStatus;
     publishedAt: Date | null;
@@ -86,6 +87,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
       sequence: number;
       title: string;
       contentHtml: string;
+      contentUrl: string | null;
       aiGuidePrompt: string | null;
     }>;
   }): SubjectCourseRecord {
@@ -99,7 +101,10 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
       publishedAt: row.publishedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-      chapters: row.chapters.map((chapter) => ({ ...chapter })),
+      chapters: row.chapters.map((chapter) => ({
+        ...chapter,
+        contentUrl: chapter.contentUrl ?? null,
+      })),
     };
   }
 }
