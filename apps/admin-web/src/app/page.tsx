@@ -39,6 +39,10 @@ const LOCAL_ADMIN_ACCOUNTS = {
   },
 } as const;
 
+function isPlatformAdminSession(session: { actor: { kind: string } }): boolean {
+  return session.actor.kind === 'platform-admin';
+}
+
 export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   const client = useMemo(
     () =>
@@ -171,7 +175,52 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       window.sessionStorage.setItem('budstar.admin.campus', campusId);
       setOverview(await client.getCampusOverview(campusId));
     });
+    void loadTodoStream(campusId);
   }
+
+  // ADR-0010 移动待办流：手机优先的真实聚合（提交/审核/线索），
+  // 桌面端同样展示；身份空间差异化（教师=校区队列，平台=CRM 线索）。
+  const [todo, setTodo] = useState<{
+    loaded: boolean;
+    submissions: Array<{
+      id: string;
+      lessonTitle: string;
+      studentDisplayName: string;
+      status: string;
+    }>;
+    moderation: Array<{ id: string; title: string; riskLevel: string }>;
+    leads: Array<{ id: string; parentName: string; status: string }>;
+  }>({ loaded: false, submissions: [], moderation: [], leads: [] });
+
+  async function loadTodoStream(campusId?: string) {
+    const campus = campusId ?? selectedCampus;
+    if (!campus) return;
+    try {
+      if (session && isPlatformAdminSession(session)) {
+        const leads = await client.listAppointmentLeads(campus, {
+          status: 'PENDING_CONTACT',
+        });
+        setTodo({ loaded: true, submissions: [], moderation: [], leads });
+      } else {
+        const [submissions, moderation] = await Promise.all([
+          client.listSubmissions(campus, { status: 'SUBMITTED' }),
+          client.listModerationQueue(campus),
+        ]);
+        setTodo({
+          loaded: true,
+          submissions,
+          moderation: moderation.filter((item) => item.status === 'PENDING'),
+          leads: [],
+        });
+      }
+    } catch {
+      setTodo((current) => ({ ...current, loaded: true }));
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCampus) void loadTodoStream();
+  }, [selectedCampus]);
 
   async function logout() {
     await client.logout();
@@ -452,13 +501,34 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
                 {(isPlatformAdmin
                   ? [
                       ['治理', '查看脱敏数据浏览器', '平台治理', '/platform'],
-                      ['课程', '课程版本治理', '仅平台身份', '/platform'],
+                      [
+                        '课程',
+                        '课程版本治理',
+                        '仅平台身份',
+                        '/platform/subject-courses',
+                      ],
+                      [
+                        '线索',
+                        `待联系线索 ${todo.leads.length} 条`,
+                        'CRM 跟进',
+                        '/platform/leads',
+                      ],
                     ]
                   : [
-                      ['今天', '确认作品点评', '教学队列', '/feedback'],
-                      ['报告', '生成阶段报告', '成长节点', '/feedback'],
-                      ['家长', '跟进预约线索', '教务跟进', '/leads'],
-                      ['绑定', '处理家庭绑定', '家长服务', '/family'],
+                      [
+                        '提交',
+                        `待点评作品 ${todo.submissions.length} 份`,
+                        '教学队列',
+                        '/teacher/submissions',
+                      ],
+                      [
+                        '审核',
+                        `社区待审核 ${todo.moderation.length} 条`,
+                        '风险控制',
+                        '/teacher/moderation',
+                      ],
+                      ['点评', '发布正式点评', '人工闭环', '/teacher/feedback'],
+                      ['绑定', '处理家庭绑定', '家长服务', '/teacher/family'],
                     ]
                 ).map(([priority, title, meta, href]) => (
                   <button

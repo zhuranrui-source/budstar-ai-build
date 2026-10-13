@@ -77,18 +77,18 @@ export default function PartnerPortalPage() {
   }
 
   return (
-    <main className='partner-portal'>
-      <header className='partner-head'>
+    <main className="partner-portal">
+      <header className="partner-head">
         <div>
           <h1>BudStar 合作方内容门户</h1>
           <p>已发布课程与学科内容 · 用于经营自有生源</p>
         </div>
-        <button type='button' onClick={() => void handleLogout()}>
+        <button type="button" onClick={() => void handleLogout()}>
           退出登录
         </button>
       </header>
 
-      {error && <p role='alert'>{error}</p>}
+      {error && <p role="alert">{error}</p>}
       {loading && <p>加载中…</p>}
 
       <section>

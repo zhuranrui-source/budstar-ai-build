@@ -229,3 +229,109 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== ADR-0010 移动端响应式：手机优先的办公流 ===== */
+@media (max-width: 720px) {
+  .ops-body,
+  body {
+    font-size: 14px;
+  }
+  .ops-shell,
+  .ops-main,
+  main {
+    padding: 12px !important;
+    max-width: 100% !important;
+  }
+  /* 导航在窄屏折行为横向滚动条带 */
+  .ops-nav,
+  nav[class*='ops'] {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ops-nav a,
+  .ops-nav button,
+  nav[class*='ops'] a {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  /* 概览与待办卡片单列 */
+  .ops-summary,
+  .ops-task-list,
+  .ops-dashboard {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  /* 表格横向滚动而非压缩 */
+  .admin-section table,
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  /* 表单与按钮全宽、可点区域 ≥44px */
+  .admin-section form label,
+  form label {
+    display: block;
+    margin-bottom: 10px;
+  }
+  .admin-section form input,
+  .admin-section form select,
+  .admin-section form textarea,
+  .admin-section form button,
+  form button {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .admin-section form button {
+    margin-top: 8px;
+  }
+  .ops-page-head h1 {
+    font-size: 22px;
+  }
+  .admin-section-head h2 {
+    font-size: 18px;
+  }
+}
+
+/* 合作方门户（无 OpsShell，独立轻样式） */
+.partner-portal {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+.partner-portal .partner-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.partner-portal h1 {
+  font-size: 22px;
+  margin: 0;
+}
+.partner-portal section {
+  margin-bottom: 32px;
+}
+.partner-portal table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.partner-portal th,
+.partner-portal td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eceae6;
+  font-size: 14px;
+}
+@media (max-width: 720px) {
+  .partner-portal table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
