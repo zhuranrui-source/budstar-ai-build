@@ -87,6 +87,26 @@ function listHtmls(dir, recursive = false) {
   return out;
 }
 
+/** ③ AI 引导：提取实验室「教师参考」备课内容作为个性化讲解上下文。 */
+function extractTeacherContext(html) {
+  const panel =
+    html.match(/<section id="panel-4"[^>]*>([\s\S]*?)<\/section>/) ??
+    html.match(/05 教师参考([\s\S]{0,8000}?)(?:<section|$)/);
+  const source = panel ? panel[1] : html;
+  const text = source
+    .replace(/<script[\s\S]*?<\/script>/g, ' ')
+    .replace(/<style[\s\S]*?<\/style>/g, ' ')
+    .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.slice(0, 12_000);
+}
+
 function chapterTitleFromFile(file) {
   const base = path.basename(file, '.html');
   return base
@@ -173,11 +193,13 @@ for (const course of courses) {
   const slug = `${course.subject.toLowerCase()}-${String(courseNo).padStart(2, '0')}`;
   const chapters = course.files.map((file, index) => {
     const dest = path.join(STORAGE_ROOT, slug, path.basename(file));
+    const html = fs.readFileSync(file, 'utf8');
     return {
       sequence: sequenceOf(file) || index + 1,
       title: chapterTitleFromFile(file),
       contentHtml: '',
       contentUrl: `/api/static/subject-courses?path=${encodeURIComponent(`${slug}/${path.basename(file)}`)}`,
+      aiContext: extractTeacherContext(html),
       sourceFile: file,
       destFile: dest,
       sizeKb: Math.round(fs.statSync(file).size / 1024),
@@ -259,6 +281,7 @@ if (args.includes('--api')) {
           title: ch.title,
           contentHtml: '',
           contentUrl: ch.contentUrl,
+          aiContext: ch.aiContext,
         })),
       }),
     });

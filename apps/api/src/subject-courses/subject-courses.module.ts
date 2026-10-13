@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
+import { AiTeacherModule } from '../ai-teacher/ai-teacher.module';
 import { PrismaService } from '../database/prisma.service';
 import { PrismaSubjectCourseStore } from './prisma-subject-courses.store';
 import { PartnerSubjectCoursesController } from './partner-subject-courses.controller';
+import { FamilySubjectCoursesController } from './family-subject-courses.controller';
 import { PlatformSubjectCoursesController } from './platform-subject-courses.controller';
 import { SubjectCourseStaticController } from './subject-course-static.controller';
 import {
@@ -14,10 +16,11 @@ import {
 export const SUBJECT_COURSE_STORE = Symbol('SUBJECT_COURSE_STORE');
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AiTeacherModule],
   controllers: [
     PlatformSubjectCoursesController,
     PartnerSubjectCoursesController,
+    FamilySubjectCoursesController,
     SubjectCourseStaticController,
   ],
   providers: [

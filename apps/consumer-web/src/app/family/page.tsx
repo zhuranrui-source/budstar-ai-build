@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import {
+  explainSubjectChapter,
   getStudentCurriculumForParent,
+  getSubjectCourseForFamily,
   listBoundStudents,
   listFamilyBindings,
   listStudentClassesForParent,
+  listSubjectCoursesForFamily,
   selectActiveStudent,
   transitionStudentSubmissionForParent,
+  type SubjectCourseDetailView,
+  type SubjectCourseSummaryView,
 } from '../family-api';
 import type {
   ClassMembership,
@@ -19,6 +24,19 @@ import { DEMO_CHILD, DEMO_PARENT_GROWTH } from '../portal-demo-content';
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001/api';
+
+const SUBJECT_LABELS: Record<string, string> = {
+  MATH: '数学',
+  CHINESE: '语文',
+  ENGLISH: '英语',
+  PHYSICS: '物理',
+  CHEMISTRY: '化学',
+  BIOLOGY: '生物',
+  HISTORY: '历史',
+  GEOGRAPHY: '地理',
+  POLITICS: '道法',
+  OTHER: '其他',
+};
 
 type GrowthView = {
   studentProfileId: string;
@@ -56,6 +74,15 @@ export default function FamilyPortalPage() {
     null,
   );
   const [learningError, setLearningError] = useState('');
+  const [subjectCourses, setSubjectCourses] = useState<
+    SubjectCourseSummaryView[]
+  >([]);
+  const [subjectDetail, setSubjectDetail] =
+    useState<SubjectCourseDetailView | null>(null);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   function applyDemo(
     existing: Array<{
@@ -230,6 +257,66 @@ export default function FamilyPortalPage() {
       cancelled = true;
     };
   }, [students]);
+
+  // 学科互动实验室目录（已发布；家长登录即可，无需班级绑定）
+  useEffect(() => {
+    const token = activeAccessToken('parent') ?? '';
+    if (!token) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const courses = await listSubjectCoursesForFamily(token);
+        if (cancelled) return;
+        setSubjectCourses(courses);
+      } catch {
+        if (!cancelled) setSubjectCourses([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function openSubjectCourse(courseId: string) {
+    const token = activeAccessToken('parent') ?? '';
+    if (!token) return;
+    setAiAnswer('');
+    if (subjectDetail?.id === courseId) {
+      setSubjectDetail(null);
+      return;
+    }
+    try {
+      setSubjectDetail(await getSubjectCourseForFamily(token, courseId));
+    } catch (cause) {
+      setLearningError(cause instanceof Error ? cause.message : '内容加载失败');
+    }
+  }
+
+  async function askAi(event: { preventDefault(): void }) {
+    event.preventDefault();
+    const token = activeAccessToken('parent') ?? '';
+    const chapter = subjectDetail?.chapters[0];
+    if (!token || !subjectDetail || !chapter || !aiQuestion.trim()) return;
+    setAiLoading(true);
+    setAiAnswer('');
+    try {
+      const result = await explainSubjectChapter(
+        token,
+        subjectDetail.id,
+        chapter.id,
+        aiQuestion.trim(),
+      );
+      setAiAnswer(result.answer);
+    } catch (cause) {
+      setAiAnswer(
+        cause instanceof Error
+          ? 'AI 老师暂时不可用，请稍后再试'
+          : String(cause),
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   async function submitLesson(
     submissionId: string,
@@ -430,12 +517,103 @@ export default function FamilyPortalPage() {
             )}
 
             <div className="community-section-head" style={{ marginTop: 28 }}>
-              <h2>学科内容（小学/初中）</h2>
+              <h2>学科内容（K12 互动实验室）</h2>
             </div>
-            <p role="status">
-              学科内容库接入中：数学、语文等各学科 AI
-              理解课将按孩子的年级出现在这里。
-            </p>
+            {subjectCourses.length === 0 ? (
+              <p role="status">
+                暂无已发布的学科内容；管理端发布后将按学段出现在这里。
+              </p>
+            ) : (
+              <ul style={{ paddingLeft: 18 }}>
+                {subjectCourses.map((course) => (
+                  <li key={course.id} style={{ marginBottom: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => void openSubjectCourse(course.id)}
+                    >
+                      {SUBJECT_LABELS[course.subject] ?? course.subject} ·{' '}
+                      {course.title}（{course.chapterCount} 章）
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {subjectDetail && (
+              <div style={{ marginTop: 12 }}>
+                <h3 style={{ marginBottom: 8 }}>
+                  {subjectDetail.title} · 章节
+                </h3>
+                <ul style={{ paddingLeft: 18 }}>
+                  {subjectDetail.chapters.map((chapter) => (
+                    <li key={chapter.id} style={{ marginBottom: 6 }}>
+                      {chapter.sequence}. {chapter.title}
+                      {chapter.contentUrl && (
+                        <>
+                          {' '}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setIframeUrl(`${apiBaseUrl}${chapter.contentUrl}`)
+                            }
+                          >
+                            进入实验室
+                          </button>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <form
+                  onSubmit={(event) => void askAi(event)}
+                  style={{ marginTop: 12 }}
+                >
+                  <label>
+                    问 AI 老师（基于本实验室教师参考）：
+                    <input
+                      value={aiQuestion}
+                      onChange={(event) => setAiQuestion(event.target.value)}
+                      placeholder="例如：孩子总是把最大值当平均数，怎么引导？"
+                      style={{ width: '100%' }}
+                    />
+                  </label>
+                  <button type="submit" disabled={aiLoading}>
+                    {aiLoading ? '思考中…' : '提问'}
+                  </button>
+                </form>
+                {aiAnswer && (
+                  <p role="status" style={{ whiteSpace: 'pre-wrap' }}>
+                    {aiAnswer}
+                  </p>
+                )}
+              </div>
+            )}
+            {iframeUrl && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: 6,
+                  }}
+                >
+                  <b>互动实验室</b>
+                  <button type="button" onClick={() => setIframeUrl(null)}>
+                    关闭
+                  </button>
+                </div>
+                <iframe
+                  src={iframeUrl}
+                  title="学科互动实验室"
+                  sandbox="allow-scripts allow-forms"
+                  style={{
+                    width: '100%',
+                    height: 520,
+                    border: '1px solid #d8d3cc',
+                    borderRadius: 8,
+                  }}
+                />
+              </div>
+            )}
           </section>
 
           <section className="growth-timeline">

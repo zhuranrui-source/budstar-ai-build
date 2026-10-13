@@ -33,6 +33,12 @@ export function configureApp(app: INestApplication) {
     set(setting: string, value: number): void;
   };
   expressApp.set('trust proxy', trustProxyHops);
+  // 学科内容治理需要承载多章节 + AI 教师参考上下文（最大约 4MB），
+  // 其余路由维持紧凑默认限制（公开预约面等不受影响）。
+  app.use(
+    '/api/platform/subject-courses',
+    json({ limit: process.env.SUBJECT_COURSE_BODY_LIMIT ?? '4mb' }),
+  );
   app.use(json({ limit: bodyLimit }));
   app.use(urlencoded({ extended: false, limit: bodyLimit }));
   app.use((request: Request, response: Response, next: NextFunction) => {

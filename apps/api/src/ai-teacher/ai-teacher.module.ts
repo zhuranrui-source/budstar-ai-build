@@ -77,6 +77,6 @@ export const AI_TEACHER_STORE = Symbol('AI_TEACHER_STORE');
       inject: [AI_GATEWAY_ADAPTER, AI_TEACHER_STORE, SUBMISSION_STORE],
     },
   ],
-  exports: [AiTeacherService],
+  exports: [AiTeacherService, AI_GATEWAY_ADAPTER],
 })
 export class AiTeacherModule {}

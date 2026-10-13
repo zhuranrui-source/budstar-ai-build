@@ -148,6 +148,7 @@ export const subjectChapterDraftSchema = z
     contentHtml: z.string().max(500_000),
     contentUrl: z.string().trim().max(1000).optional(),
     aiGuidePrompt: z.string().trim().max(1000).optional(),
+    aiContext: z.string().max(200_000).optional(),
   })
   .strict();
 
@@ -169,6 +170,7 @@ export const subjectChapterViewSchema = z
     contentHtml: z.string(),
     contentUrl: z.string().nullable(),
     aiGuidePrompt: z.string().nullable(),
+    aiContext: z.string().nullable(),
   })
   .strict();
 

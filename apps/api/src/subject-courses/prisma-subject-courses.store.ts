@@ -31,6 +31,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
             contentHtml: chapter.contentHtml,
             contentUrl: chapter.contentUrl,
             aiGuidePrompt: chapter.aiGuidePrompt,
+            aiContext: chapter.aiContext,
           })),
         },
       },
@@ -89,6 +90,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
       contentHtml: string;
       contentUrl: string | null;
       aiGuidePrompt: string | null;
+      aiContext: string | null;
     }>;
   }): SubjectCourseRecord {
     return {
@@ -104,6 +106,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
       chapters: row.chapters.map((chapter) => ({
         ...chapter,
         contentUrl: chapter.contentUrl ?? null,
+        aiContext: chapter.aiContext ?? null,
       })),
     };
   }

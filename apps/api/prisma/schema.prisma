@@ -412,6 +412,7 @@ model SubjectChapter {
   contentHtml     String       @db.Text
   contentUrl      String?      @db.VarChar(1000)
   aiGuidePrompt   String?      @db.VarChar(1000)
+  aiContext       String?      @db.Text
   subjectCourse   SubjectCourse @relation(fields: [subjectCourseId], references: [id], onDelete: Cascade)
 
   @@unique([subjectCourseId, sequence])

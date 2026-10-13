@@ -54,6 +54,19 @@ export default function SubjectCoursesPage() {
   const [title, setTitle] = useState('');
   const [chapterTitle, setChapterTitle] = useState('');
   const [contentHtml, setContentHtml] = useState('');
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterGrade, setFilterGrade] = useState('');
+  const [detail, setDetail] = useState<{
+    id: string;
+    title: string;
+    chapters: Array<{
+      id: string;
+      sequence: number;
+      title: string;
+      contentUrl: string | null;
+      aiContext: string | null;
+    }>;
+  } | null>(null);
 
   useEffect(() => {
     void reload();
@@ -98,6 +111,19 @@ export default function SubjectCoursesPage() {
       setError(
         cause instanceof ApiRequestError ? cause.message : '创建失败，请重试',
       );
+    }
+  }
+
+  async function toggleDetail(id: string) {
+    setError('');
+    try {
+      if (detail?.id === id) {
+        setDetail(null);
+        return;
+      }
+      setDetail(await client.getSubjectCourse(id));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '详情加载失败');
     }
   }
 
@@ -191,6 +217,42 @@ export default function SubjectCoursesPage() {
         </form>
 
         <h3>已录入内容</h3>
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            marginBottom: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <label>
+            学科筛选
+            <select
+              value={filterSubject}
+              onChange={(event) => setFilterSubject(event.target.value)}
+            >
+              <option value="">全部</option>
+              {SUBJECTS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            学段筛选
+            <select
+              value={filterGrade}
+              onChange={(event) => setFilterGrade(event.target.value)}
+            >
+              <option value="">全部</option>
+              <option value="PRIMARY">小学</option>
+              <option value="JUNIOR_HIGH">初中</option>
+              <option value="SENIOR_HIGH">高中</option>
+              <option value="GENERAL">全学段</option>
+            </select>
+          </label>
+        </div>
         {courses.length === 0 ? (
           <p>还没有学科内容；创建草稿后即可导入课程 HTML。</p>
         ) : (
@@ -207,26 +269,68 @@ export default function SubjectCoursesPage() {
             </thead>
             <tbody>
               {courses.map((course) => (
-                <tr key={course.id}>
-                  <td>{course.title}</td>
-                  <td>{course.subject}</td>
-                  <td>
-                    {course.gradeBand === 'PRIMARY' ? '小学' : '初中'} ·{' '}
-                    {course.gradeLevel}
-                  </td>
-                  <td>{course.status}</td>
-                  <td>{course.chapterCount}</td>
-                  <td>
-                    {course.status === 'DRAFT' && (
+                <>
+                  <tr key={course.id}>
+                    <td>{course.title}</td>
+                    <td>{course.subject}</td>
+                    <td>
+                      {course.gradeBand === 'PRIMARY'
+                        ? '小学'
+                        : course.gradeBand === 'JUNIOR_HIGH'
+                          ? '初中'
+                          : course.gradeBand === 'SENIOR_HIGH'
+                            ? '高中'
+                            : '全学段'}
+                      {course.gradeLevel ? ` · ${course.gradeLevel}` : ''}
+                    </td>
+                    <td>{course.status}</td>
+                    <td>{course.chapterCount}</td>
+                    <td>
                       <button
                         type="button"
-                        onClick={() => void handlePublish(course.id)}
+                        onClick={() => void toggleDetail(course.id)}
                       >
-                        发布
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                        {detail?.id === course.id ? '收起' : '章节'}
+                      </button>{' '}
+                      {course.status === 'DRAFT' && (
+                        <button
+                          type="button"
+                          onClick={() => void handlePublish(course.id)}
+                        >
+                          发布
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  {detail?.id === course.id && (
+                    <tr key={`${course.id}-detail`}>
+                      <td colSpan={6}>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {detail.chapters.map((chapter) => (
+                            <li key={chapter.id} style={{ marginBottom: 6 }}>
+                              {chapter.sequence}. {chapter.title}{' '}
+                              {chapter.contentUrl && (
+                                <a
+                                  href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001'}${chapter.contentUrl}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  打开实验室
+                                </a>
+                              )}
+                              {chapter.aiContext && (
+                                <small>
+                                  {' '}
+                                  · AI 上下文 {chapter.aiContext.length} 字
+                                </small>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>

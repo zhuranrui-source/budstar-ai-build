@@ -670,6 +670,24 @@ export class AdminApiClient {
     });
   }
 
+  async getSubjectCourse(id: string): Promise<{
+    id: string;
+    title: string;
+    subject: string;
+    gradeBand: string;
+    gradeLevel: number | null;
+    status: string;
+    chapters: Array<{
+      id: string;
+      sequence: number;
+      title: string;
+      contentUrl: string | null;
+      aiContext: string | null;
+    }>;
+  }> {
+    return this.authenticatedRequest(`/platform/subject-courses/${id}`);
+  }
+
   async publishSubjectCourse(id: string) {
     return this.authenticatedRequest(
       `/platform/subject-courses/${id}/publish`,

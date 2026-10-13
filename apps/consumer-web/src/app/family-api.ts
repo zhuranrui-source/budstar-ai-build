@@ -223,3 +223,66 @@ export async function transitionStudentSubmissionForParent(
   );
   return workSubmissionDetailSchema.parse(result);
 }
+
+// ===== 学科互动实验室（家庭视图只读已发布目录 + AI 个性化讲解） =====
+
+export type SubjectCourseSummaryView = {
+  id: string;
+  subject: string;
+  gradeBand: string;
+  gradeLevel: number | null;
+  title: string;
+  chapterCount: number;
+};
+
+export type SubjectChapterView = {
+  id: string;
+  sequence: number;
+  title: string;
+  contentUrl: string | null;
+  aiContext: string | null;
+};
+
+export type SubjectCourseDetailView = SubjectCourseSummaryView & {
+  chapters: SubjectChapterView[];
+};
+
+export async function listSubjectCoursesForFamily(
+  accessToken: string,
+  fetcher: FetchLike = fetch,
+): Promise<SubjectCourseSummaryView[]> {
+  return familyRequest<SubjectCourseSummaryView[]>(
+    '/family/subject-courses',
+    accessToken,
+    {},
+    fetcher,
+  );
+}
+
+export async function getSubjectCourseForFamily(
+  accessToken: string,
+  courseId: string,
+  fetcher: FetchLike = fetch,
+): Promise<SubjectCourseDetailView> {
+  return familyRequest<SubjectCourseDetailView>(
+    `/family/subject-courses/${courseId}`,
+    accessToken,
+    {},
+    fetcher,
+  );
+}
+
+export async function explainSubjectChapter(
+  accessToken: string,
+  courseId: string,
+  chapterId: string,
+  question: string,
+  fetcher: FetchLike = fetch,
+): Promise<{ answer: string }> {
+  return familyRequest<{ answer: string }>(
+    `/family/subject-courses/${courseId}/chapters/${chapterId}/explain`,
+    accessToken,
+    { method: 'POST', body: JSON.stringify({ question }) },
+    fetcher,
+  );
+}

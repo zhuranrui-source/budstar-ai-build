@@ -17,6 +17,7 @@ export type SubjectChapterRecord = {
   contentHtml: string;
   contentUrl: string | null;
   aiGuidePrompt: string | null;
+  aiContext: string | null;
 };
 
 export type SubjectCourseRecord = {
@@ -192,6 +193,7 @@ export class SubjectCoursesService {
       contentHtml: chapter.contentHtml,
       contentUrl: chapter.contentUrl ?? null,
       aiGuidePrompt: chapter.aiGuidePrompt ?? null,
+      aiContext: chapter.aiContext ?? null,
     };
   }
 
@@ -220,6 +222,7 @@ export class SubjectCoursesService {
           contentHtml: chapter.contentHtml,
           contentUrl: chapter.contentUrl,
           aiGuidePrompt: chapter.aiGuidePrompt,
+          aiContext: chapter.aiContext,
         })),
     };
   }
