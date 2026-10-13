@@ -309,11 +309,29 @@ export const studentGrowthViewSchema = z
 
 export type StudentGrowthView = z.infer<typeof studentGrowthViewSchema>;
 
+/**
+ * ADR-0007：家庭视图统一不展示五维数字等级——
+ * 评估与报告只回维度名与描述性依据，level 不出 API。
+ */
+const familyDimensionFeedbackSchema = z
+  .object({
+    dimension: z.string(),
+    rationale: z.string(),
+  })
+  .strict();
+
 export const parentGrowthViewSchema = z
   .object({
     studentProfileId: z.string().uuid(),
     publishedFeedback: z.array(formalFeedbackSchema),
-    confirmedEvaluations: z.array(fiveDimEvaluationSchema),
+    confirmedEvaluations: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          scores: z.array(familyDimensionFeedbackSchema),
+        })
+        .strict(),
+    ),
     publishedReports: z.array(
       z
         .object({
@@ -326,7 +344,7 @@ export const parentGrowthViewSchema = z
           ]),
           summary: z.string(),
           teacherObservation: z.string().nullable(),
-          scores: z.array(growthDimensionScoreSchema),
+          scores: z.array(familyDimensionFeedbackSchema),
           publishedAt: z.string().datetime(),
         })
         .strict(),

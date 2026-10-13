@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
+import { FamilyModule } from '../family/family.module';
+import { FamilyService } from '../family/family.service';
 import { PrismaService } from '../database/prisma.service';
 import {
   AdminCommunityController,
@@ -16,7 +18,7 @@ import { PrismaCommunityStore } from './prisma-community.store';
 export const COMMUNITY_STORE = Symbol('COMMUNITY_STORE');
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, FamilyModule],
   controllers: [
     AdminCommunityController,
     FamilyPlanetController,
@@ -43,8 +45,10 @@ export const COMMUNITY_STORE = Symbol('COMMUNITY_STORE');
     },
     {
       provide: CommunityService,
-      useFactory: (store: CommunityStore) => new CommunityService(store),
-      inject: [COMMUNITY_STORE],
+      // ADR-0008：公开流（CLASS/CAMPUS）创建时强制监护人展示授权
+      useFactory: (store: CommunityStore, family: FamilyService) =>
+        new CommunityService(store, family),
+      inject: [COMMUNITY_STORE, FamilyService],
     },
   ],
   exports: [CommunityService],

@@ -47,6 +47,14 @@ export interface CommunityStore {
   listModerationQueue(campusId: string): Promise<CommunityPostRecord[]>;
 }
 
+/** ADR-0008：作品进入公开流（CLASS/CAMPUS）需监护人展示授权；由 FamilyService 实现。 */
+export interface WorkDisplayEligibilityChecker {
+  getWorkDisplayEligibility(studentProfileId: string): Promise<{
+    canDisplayPublicly: boolean;
+    reason: string;
+  }>;
+}
+
 export class InMemoryCommunityStore implements CommunityStore {
   private readonly students = new Map<
     string,
@@ -148,7 +156,10 @@ function isVisibleToStudent(
 
 @Injectable()
 export class CommunityService {
-  constructor(private readonly store: CommunityStore) {}
+  constructor(
+    private readonly store: CommunityStore,
+    private readonly displayEligibility?: WorkDisplayEligibilityChecker,
+  ) {}
 
   async createPost(
     campusId: string,
@@ -158,6 +169,20 @@ export class CommunityService {
     const student = await this.store.findStudent(input.studentProfileId);
     if (!student || student.campusId !== campusId) {
       throw new ApiException(HttpStatus.NOT_FOUND, 'NOT_FOUND', '学生不存在');
+    }
+    // ADR-0008：FAMILY 范围仅家人可见，无需展示授权；
+    // CLASS/CAMPUS 进入站内公开流，必须持有效展示开关/存量授权。
+    if (input.visibilityScope !== 'FAMILY') {
+      const eligibility = this.displayEligibility
+        ? await this.displayEligibility.getWorkDisplayEligibility(student.id)
+        : { canDisplayPublicly: false, reason: 'WORK_DISPLAY_MISSING' };
+      if (!eligibility.canDisplayPublicly) {
+        throw new ApiException(
+          HttpStatus.FORBIDDEN,
+          'FORBIDDEN',
+          '缺少监护人展示授权，内容不可进入公开流（可在家庭视图开启展示开关）',
+        );
+      }
     }
     const riskLevel = assessCommunityRisk(`${input.title}\n${input.body}`);
     const status = initialCommunityStatusForRisk(riskLevel);

@@ -209,7 +209,9 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
         setTodo({
           loaded: true,
           submissions,
-          moderation: moderation.filter((item) => item.status === 'PENDING'),
+          moderation: moderation.filter(
+            (item) => item.status === 'PENDING_REVIEW',
+          ),
           leads: [],
         });
       }

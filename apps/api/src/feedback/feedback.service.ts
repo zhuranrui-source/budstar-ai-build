@@ -698,16 +698,22 @@ export class FeedbackService {
       await this.store.listConfirmedFiveDimForStudent(studentProfileId);
     const reports =
       await this.store.listPublishedGrowthReports(studentProfileId);
+    const stripLevel = (
+      scores: Array<{ dimension: string; rationale: string }>,
+    ) => scores.map(({ dimension, rationale }) => ({ dimension, rationale }));
     return {
       studentProfileId,
       publishedFeedback: published.map((item) => this.toFormalDto(item)),
-      confirmedEvaluations: confirmed.map((item) => this.toFiveDimDto(item)),
+      confirmedEvaluations: confirmed.map((item) => ({
+        id: item.id,
+        scores: stripLevel(item.scores),
+      })),
       publishedReports: reports.map((item) => ({
         id: item.id,
         milestone: item.milestone,
         summary: item.summary,
         teacherObservation: item.teacherObservation,
-        scores: item.scores,
+        scores: stripLevel(item.scores),
         publishedAt: item.publishedAt!.toISOString(),
       })),
     };

@@ -47,4 +47,22 @@ export async function wechatBindPhone(
   });
 }
 
+/** 短信兜底（ADR-0006）：微信一键授权失败/被拒时，走家长 OTP 通道绑定手机号。 */
+export async function requestParentOtp(phone: string): Promise<void> {
+  await request<{ sent: true }>('/auth/parent/request-otp', undefined, {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export async function verifyParentOtp(
+  phone: string,
+  code: string,
+): Promise<WechatSession> {
+  return request<WechatSession>('/auth/parent/verify-otp', undefined, {
+    method: 'POST',
+    body: JSON.stringify({ phone, code }),
+  });
+}
+
 export { API_BASE_URL };

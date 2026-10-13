@@ -86,11 +86,14 @@ export async function transitionSubmission(
   );
 }
 
-export async function listPublishedSubjectCourses(): Promise<
-  SubjectCourseSummary[]
-> {
-  // 学科内容目录面向登录用户只读（合作方门户同源）
-  return request<SubjectCourseSummary[]>('/partner/content/subject-courses');
+export async function listPublishedSubjectCourses(
+  accessToken: string,
+): Promise<SubjectCourseSummary[]> {
+  // 家庭视图读取面（ADR-0007）；partner 端点是合作方专属，家长 token 会被 403
+  return request<SubjectCourseSummary[]>(
+    '/family/subject-courses',
+    accessToken,
+  );
 }
 
 export type { WechatSession };

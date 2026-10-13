@@ -357,7 +357,7 @@ export default function FamilyPortalPage() {
         <div className="community-page-head">
           <div>
             <h1>孩子成长</h1>
-            <p>课程进度、作品墙、五维评价、老师反馈和阶段报告集中在这里。</p>
+            <p>课程进度、作品墙、成长维度反馈和阶段报告集中在这里。</p>
           </div>
           <span className="community-role-badge">家长模式</span>
         </div>
@@ -648,7 +648,7 @@ export default function FamilyPortalPage() {
 
           <aside className="child-feedback">
             <div className="community-section-head">
-              <h2>五维评价</h2>
+              <h2>成长维度</h2>
             </div>
             <div className="growth-summary" style={{ marginBottom: 18 }}>
               {(
@@ -656,9 +656,8 @@ export default function FamilyPortalPage() {
                 DEMO_PARENT_GROWTH.dimensions
               ).map((score) => (
                 <article key={score.dimension}>
-                  <b>
-                    {score.dimension} · {score.level} 级
-                  </b>
+                  {/* ADR-0007：家庭视图不展示五维数字等级，只呈现描述性反馈 */}
+                  <b>{score.dimension}</b>
                   <p>{score.rationale}</p>
                 </article>
               ))}

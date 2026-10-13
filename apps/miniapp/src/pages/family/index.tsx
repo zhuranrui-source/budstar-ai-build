@@ -48,10 +48,12 @@ export default function FamilyPage() {
 
   useEffect(() => {
     void reloadAll();
-    // 学科内容目录无需家庭绑定，微信登录即可浏览（ADR-0006）
-    listPublishedSubjectCourses()
-      .then(setSubjects)
-      .catch(() => setSubjects([]));
+    // 学科内容目录：家长 token 经家庭读取面获取（ADR-0007）
+    if (token) {
+      listPublishedSubjectCourses(token)
+        .then(setSubjects)
+        .catch(() => setSubjects([]));
+    }
   }, []);
 
   async function reloadAll() {

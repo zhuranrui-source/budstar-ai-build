@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import { View, Button, Text } from '@tarojs/components';
+import { View, Button, Text, Input } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { wechatLogin, wechatBindPhone } from '../../utils/api';
+import {
+  wechatLogin,
+  wechatBindPhone,
+  requestParentOtp,
+  verifyParentOtp,
+} from '../../utils/api';
 
 /**
  * 登录页（ADR-0006）：wx.login 静默登录为身份底座；
@@ -14,6 +19,9 @@ export default function LoginPage() {
   } | null>(null);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [useSms, setUseSms] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
 
   async function handleLogin() {
     setLoading(true);

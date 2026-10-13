@@ -84,7 +84,11 @@ describe('FeedbackService', () => {
     expect(published.status).toBe('PUBLISHED');
 
     const parentView = await service.getParentGrowthView(studentId);
-    expect(parentView.confirmedEvaluations[0]?.scores[0]?.level).toBeDefined();
+    // ADR-0007：家庭视图不输出数字等级，只有维度与描述性依据
+    expect(
+      parentView.confirmedEvaluations[0]?.scores[0]?.rationale,
+    ).toBeDefined();
+    expect(JSON.stringify(parentView).match(/\"level\"/)).toBeNull();
     expect(parentView.publishedReports[0]?.milestone).toBe(4);
   });
 
