@@ -41,6 +41,9 @@ export const AI_TEACHER_STORE = Symbol('AI_TEACHER_STORE');
             fallbackApiKey: process.env.AI_FALLBACK_API_KEY,
             primaryEndpoint: process.env.AI_PRIMARY_ENDPOINT,
             fallbackEndpoint: process.env.AI_FALLBACK_ENDPOINT,
+            primaryModel: process.env.AI_PRIMARY_MODEL ?? process.env.AI_MODEL,
+            fallbackModel:
+              process.env.AI_FALLBACK_MODEL ?? process.env.AI_MODEL,
           },
           {
             createMock: () => new MockAiGatewayAdapter(),

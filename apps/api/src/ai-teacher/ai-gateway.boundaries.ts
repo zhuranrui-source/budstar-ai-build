@@ -28,6 +28,8 @@ export type ResolveAiGatewayOptions = {
   fallbackApiKey?: string;
   primaryEndpoint?: string;
   fallbackEndpoint?: string;
+  primaryModel?: string;
+  fallbackModel?: string;
 };
 
 export function resolveAiGatewayAdapter(

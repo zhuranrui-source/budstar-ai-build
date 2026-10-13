@@ -69,11 +69,14 @@ export class RemoteAiGatewayAdapter implements AiGatewayAdapter {
       fallbackApiKey?: string;
       primaryEndpoint: string;
       fallbackEndpoint?: string;
+      primaryModel?: string;
+      fallbackModel?: string;
     },
     private readonly transport: (
       endpoint: string,
       apiKey: string,
       input: AiGatewayChatInput,
+      model: string,
     ) => Promise<string> = defaultTransport,
   ) {}
 
@@ -94,6 +97,7 @@ export class RemoteAiGatewayAdapter implements AiGatewayAdapter {
         this.config.primaryEndpoint,
         this.config.primaryApiKey,
         input,
+        this.config.primaryModel ?? process.env.AI_MODEL ?? 'glm-4.6',
       );
       return {
         content: truncateAiTeacherMessage(content),
@@ -111,6 +115,7 @@ export class RemoteAiGatewayAdapter implements AiGatewayAdapter {
         this.config.fallbackEndpoint,
         this.config.fallbackApiKey,
         input,
+        this.config.fallbackModel ?? process.env.AI_MODEL ?? 'deepseek-chat',
       );
       return {
         content: truncateAiTeacherMessage(content),
@@ -131,6 +136,7 @@ async function defaultTransport(
   endpoint: string,
   apiKey: string,
   input: AiGatewayChatInput,
+  model: string,
 ): Promise<string> {
   const url = `${endpoint.replace(/\/+$/, '')}/chat/completions`;
   const messages: Array<{
@@ -149,7 +155,7 @@ async function defaultTransport(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: process.env.AI_MODEL ?? 'glm-4.6',
+      model,
       messages,
       temperature: 0.4,
       // glm-4.6 为推理模型：reasoning_content 先消耗预算，1024 会挤空正文
