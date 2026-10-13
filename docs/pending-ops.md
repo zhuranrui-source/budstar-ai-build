@@ -25,7 +25,7 @@
 
 | ID     | 事项                    | 现状                          | 要做什么                                                             | 参考                                           |
 | ------ | ----------------------- | ----------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
-| OPS-09 | AI 主备模型真实接入     | mock / 缺配置 degraded        | 配置 `AI_GATEWAY_PROVIDER=remote` 与主备 `AI_*_API_KEY` / `ENDPOINT` | `.env.example`、`apps/api/src/ai-teacher/`     |
+| OPS-09 | AI 主备模型真实接入     | **主模型已接**（智谱 glm-4.6 实测通过）；备用缺配置 | 补配 `AI_FALLBACK_API_KEY` / `AI_FALLBACK_ENDPOINT`；生产密钥走密钥管理 | `.env.example`、`apps/api/src/ai-teacher/`     |
 | OPS-10 | 点评/五维草稿接真实模型 | 服务内 mock 文本              | 将反馈草稿生成接到同一 AI 网关，保留人工发布                         | `apps/api/src/feedback/`                       |
 | OPS-11 | 监控告警落地            | 观测基线文档已有              | 配置 P95、AI 失败率、上传失败、登录失败告警看板                      | `docs/observability.md`                        |
 | OPS-12 | 本地/CI 真库并发测试    | 无 `TEST_DATABASE_URL` 时跳过 | 本地需要时导出 `TEST_DATABASE_URL` 后再跑 API 测试                   | `apps/api/test/prisma-concurrency.e2e-spec.ts` |
