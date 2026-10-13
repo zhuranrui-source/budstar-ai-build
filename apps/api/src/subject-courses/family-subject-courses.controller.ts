@@ -97,11 +97,20 @@ export class FamilySubjectCoursesController {
         : '（本章节暂无教师参考，按通用学科知识回答）',
     ].join('\n');
 
-    const result = await this.gateway.chat({
-      systemPrompt,
-      userMessage: parsed.question,
-      history: [],
-    });
+    let result;
+    try {
+      result = await this.gateway.chat({
+        systemPrompt,
+        userMessage: parsed.question,
+        history: [],
+      });
+    } catch (cause) {
+      throw new ApiException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        'SERVICE_UNAVAILABLE',
+        `AI 讲解暂时不可用：${cause instanceof Error ? cause.message : '未知错误'}`,
+      );
+    }
     return { answer: result.content, modelRoute: result.modelRoute };
   }
 

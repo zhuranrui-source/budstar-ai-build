@@ -100,9 +100,12 @@ export class RemoteAiGatewayAdapter implements AiGatewayAdapter {
         modelRoute: 'primary',
         degraded: false,
       };
-    } catch {
+    } catch (cause) {
       if (!this.config.fallbackEndpoint || !this.config.fallbackApiKey) {
-        throw new Error('Primary AI failed and no fallback configured');
+        throw new Error(
+          'Primary AI failed and no fallback configured: ' +
+            (cause instanceof Error ? cause.message : String(cause)),
+        );
       }
       const content = await this.transport(
         this.config.fallbackEndpoint,
@@ -118,13 +121,54 @@ export class RemoteAiGatewayAdapter implements AiGatewayAdapter {
   }
 }
 
-function defaultTransport(
-  _endpoint: string,
-  _apiKey: string,
+/**
+ * OpenAI 兼容传输（智谱 BigModel coding 等）：
+ * POST {endpoint}/chat/completions，Bearer 鉴权，messages 协议。
+ * endpoint 传 base url（如 https://open.bigmodel.cn/api/coding/paas/v4），
+ * 模型可用 AI_MODEL 覆盖，默认 glm-4.6。
+ */
+async function defaultTransport(
+  endpoint: string,
+  apiKey: string,
   input: AiGatewayChatInput,
 ): Promise<string> {
-  // Deterministic stub for tests/local when remote provider is selected with keys.
-  return Promise.resolve(
-    `（远程模型）已收到：${input.userMessage.slice(0, 80)}`,
-  );
+  const url = `${endpoint.replace(/\/+$/, '')}/chat/completions`;
+  const messages: Array<{
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+  }> = [];
+  if (input.systemPrompt)
+    messages.push({ role: 'system', content: input.systemPrompt });
+  for (const item of input.history) messages.push(item);
+  messages.push({ role: 'user', content: input.userMessage });
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: process.env.AI_MODEL ?? 'glm-4.6',
+      messages,
+      temperature: 0.4,
+      // glm-4.6 为推理模型：reasoning_content 先消耗预算，1024 会挤空正文
+      max_tokens: Number(process.env.AI_MAX_TOKENS ?? 4096),
+    }),
+    signal: AbortSignal.timeout(Number(process.env.AI_TIMEOUT_MS ?? 90_000)),
+  });
+  if (!response.ok) {
+    throw new Error(`AI gateway ${response.status}`);
+  }
+  const result = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+  };
+  const message = result.choices?.[0]?.message;
+  const content = message?.content;
+  if (!content) {
+    throw new Error(
+      `AI gateway empty response (finish=${result.choices?.[0]?.finish_reason})`,
+    );
+  }
+  return content;
 }
