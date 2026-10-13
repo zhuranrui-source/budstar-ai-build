@@ -21,6 +21,7 @@ export default function LoginPage() {
     try {
       const { code } = await Taro.login();
       const result = await wechatLogin(code);
+      Taro.setStorageSync('accessToken', result.accessToken);
       setSession({
         accessToken: result.accessToken,
         displayName: result.actor.displayName,
@@ -40,7 +41,13 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await wechatBindPhone(session.accessToken, detail.code);
+      const merged = await wechatBindPhone(session.accessToken, detail.code);
+      if (merged && typeof merged === 'object' && 'accessToken' in merged) {
+        Taro.setStorageSync(
+          'accessToken',
+          (merged as { accessToken: string }).accessToken,
+        );
+      }
       setStatus('手机号绑定成功，可以进入家庭视图');
       Taro.switchTab({ url: '/pages/family/index' });
     } catch (cause) {
@@ -75,7 +82,7 @@ export default function LoginPage() {
           微信一键登录
         </Button>
       )}
-      {status ? <Text role="status">{status}</Text> : null}
+      {status ? <Text className="login-status">{status}</Text> : null}
     </View>
   );
 }

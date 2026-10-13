@@ -5,11 +5,16 @@
 const API_BASE_URL =
   process.env.TARO_APP_API_BASE_URL ?? 'http://localhost:3001/api';
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(
+  path: string,
+  accessToken?: string,
+  init: RequestInit = {},
+): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -26,7 +31,7 @@ export type WechatSession = {
 };
 
 export async function wechatLogin(code: string): Promise<WechatSession> {
-  return request<WechatSession>('/auth/wechat/login', {
+  return request<WechatSession>('/auth/wechat/login', undefined, {
     method: 'POST',
     body: JSON.stringify({ code }),
   });
@@ -36,9 +41,8 @@ export async function wechatBindPhone(
   accessToken: string,
   code: string,
 ): Promise<unknown> {
-  return request('/auth/wechat/bind-phone', {
+  return request('/auth/wechat/bind-phone', accessToken, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ code }),
   });
 }

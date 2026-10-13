@@ -1,0 +1,43 @@
+.family-page {
+  padding: 24rpx;
+}
+.family-section {
+  margin-bottom: 32rpx;
+}
+.family-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  display: block;
+}
+.family-subtitle {
+  font-size: 26rpx;
+  color: #716c68;
+  display: block;
+  margin-top: 8rpx;
+}
+.family-h2 {
+  font-size: 32rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12rpx;
+}
+.family-muted {
+  font-size: 24rpx;
+  color: #8a857f;
+  display: block;
+}
+.family-error {
+  color: #9b402a;
+  font-size: 26rpx;
+  display: block;
+  margin: 8rpx 0;
+}
+.family-students {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.family-lesson {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eceae6;
+}
