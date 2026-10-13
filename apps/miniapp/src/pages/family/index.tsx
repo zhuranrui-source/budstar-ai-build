@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Button, ScrollView } from '@tarojs/components';
+import {
+  View,
+  Text,
+  Button,
+  ScrollView,
+  Input,
+  Textarea,
+} from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
   listBoundStudents,
@@ -8,9 +15,14 @@ import {
   getStudentCurriculum,
   transitionSubmission,
   listPublishedSubjectCourses,
+  listPlanetFeed,
+  getGrowthView,
+  saveSubmissionDraft,
   type Curriculum,
   type SubjectCourseSummary,
   type StudentSwitcher,
+  type PlanetPost,
+  type GrowthViewData,
 } from '../../utils/family-api';
 
 const SUBJECT_LABELS: Record<string, string> = {
@@ -43,6 +55,15 @@ export default function FamilyPage() {
   const [subjects, setSubjects] = useState<SubjectCourseSummary[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [planet, setPlanet] = useState<PlanetPost[]>([]);
+  const [growthView, setGrowthView] = useState<GrowthViewData | null>(null);
+  const [draftLesson, setDraftLesson] = useState<{
+    mainLessonId: string;
+    track: string;
+  } | null>(null);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftDesc, setDraftDesc] = useState('');
+  const [draftUrl, setDraftUrl] = useState('');
 
   const token = Taro.getStorageSync('accessToken') as string;
 
@@ -66,8 +87,16 @@ export default function FamilyPage() {
     try {
       const next = await listBoundStudents(token);
       setSwitcher(next);
+      listPlanetFeed(token)
+        .then(setPlanet)
+        .catch(() => setPlanet([]));
       const selected = next.selectedStudentProfileId;
-      if (selected) await loadCurriculum(selected);
+      if (selected) {
+        await loadCurriculum(selected);
+        getGrowthView(token, selected)
+          .then(setGrowthView)
+          .catch(() => setGrowthView(null));
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '加载失败');
     } finally {
@@ -93,6 +122,43 @@ export default function FamilyPage() {
       await reloadAll();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '切换失败');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSaveDraft() {
+    const student = switcher?.selectedStudentProfileId;
+    const classId = curriculum?.classId;
+    if (!student || !classId || !draftLesson) return;
+    if (!draftTitle.trim() || !draftDesc.trim()) {
+      setError('请填写作品标题和说明');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const content: {
+        title: string;
+        description: string;
+        imageUrls?: string[];
+        workUrl?: string;
+      } = { title: draftTitle.trim(), description: draftDesc.trim() };
+      if (draftUrl.trim()) content.workUrl = draftUrl.trim();
+      if (draftLesson.track === 'VIBE_CODING' && !content.workUrl) {
+        setError('Vibe Coding 作品需要提供链接');
+        return;
+      }
+      const draft = await saveSubmissionDraft(token, student, {
+        classId,
+        mainLessonId: draftLesson.mainLessonId,
+        content,
+      });
+      await transitionSubmission(token, student, draft.id, 'SUBMITTED');
+      setDraftLesson(null);
+      await loadCurriculum(student);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '提交失败，请重试');
     } finally {
       setLoading(false);
     }

@@ -97,3 +97,64 @@ export async function listPublishedSubjectCourses(
 }
 
 export type { WechatSession };
+
+// ===== 星芽星球与成长报告（家庭视图读取面） =====
+
+export type PlanetPost = {
+  id: string;
+  title: string;
+  visibilityScope: string;
+  studentDisplayName: string;
+  publishedAt: string | null;
+};
+
+export type GrowthReportView = {
+  id: string;
+  milestone: number;
+  summary: string;
+  teacherObservation: string | null;
+};
+
+export type GrowthViewData = {
+  publishedReports: GrowthReportView[];
+  confirmedEvaluations: Array<{
+    scores: Array<{ dimension: string; rationale: string }>;
+  }>;
+};
+
+export async function listPlanetFeed(
+  accessToken: string,
+): Promise<PlanetPost[]> {
+  return request<PlanetPost[]>('/family/planet/feed', accessToken);
+}
+
+export async function getGrowthView(
+  accessToken: string,
+  studentProfileId: string,
+): Promise<GrowthViewData> {
+  return request<GrowthViewData>(
+    `/family/growth/${studentProfileId}`,
+    accessToken,
+  );
+}
+
+export async function saveSubmissionDraft(
+  accessToken: string,
+  studentProfileId: string,
+  input: {
+    classId: string;
+    mainLessonId: string;
+    content: {
+      title: string;
+      description: string;
+      imageUrls?: string[];
+      workUrl?: string;
+    };
+  },
+): Promise<{ id: string }> {
+  return request<{ id: string }>(
+    `/family/students/${studentProfileId}/submissions/draft`,
+    accessToken,
+    { method: 'PUT', body: JSON.stringify(input) },
+  );
+}
