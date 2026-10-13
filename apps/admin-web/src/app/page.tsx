@@ -31,6 +31,12 @@ const LOCAL_ADMIN_ACCOUNTS = {
     secondFactorCode: '000000',
     hint: '平台：platform@local / Platform123!，二次验证码 000000',
   },
+  partner: {
+    loginIdentifier: 'partner@local',
+    password: 'Partner123!',
+    secondFactorCode: '000000',
+    hint: '合作方：partner@local / Partner123!，二次验证码 000000',
+  },
 } as const;
 
 export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
@@ -45,7 +51,7 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   const [challenge, setChallenge] = useState<AuthenticationChallenge | null>(
     null,
   );
-  const [entry, setEntry] = useState<'staff' | 'platform'>('staff');
+  const [entry, setEntry] = useState<'staff' | 'partner' | 'platform'>('staff');
   const [loginIdentifier, setLoginIdentifier] = useState<string>(
     LOCAL_ADMIN_ACCOUNTS.staff.loginIdentifier,
   );
@@ -145,6 +151,15 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       if (nextSession.actor.kind === 'platform-admin') {
         setOverview(await client.getPlatformOverview());
       }
+      // ADR-0010：按身份空间落位——合作方 → /partner，平台 → /platform
+      if (nextSession.actor.kind === 'partner') {
+        window.location.replace('/partner');
+        return;
+      }
+      if (loginOnly && nextSession.actor.kind === 'platform-admin') {
+        window.location.replace('/platform');
+        return;
+      }
       if (loginOnly) window.location.replace('/');
     });
   }
@@ -167,7 +182,7 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     window.location.replace('/login');
   }
 
-  function switchEntry(nextEntry: 'staff' | 'platform') {
+  function switchEntry(nextEntry: 'staff' | 'partner' | 'platform') {
     const account = LOCAL_ADMIN_ACCOUNTS[nextEntry];
     setEntry(nextEntry);
     setChallenge(null);
@@ -243,6 +258,13 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
                 type="button"
               >
                 员工入口
+              </button>
+              <button
+                className={entry === 'partner' ? 'is-active' : undefined}
+                type="button"
+                onClick={() => switchEntry('partner')}
+              >
+                合作方
               </button>
               <button
                 className={entry === 'platform' ? 'is-active' : undefined}

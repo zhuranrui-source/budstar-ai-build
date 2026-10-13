@@ -47,7 +47,7 @@ export class AdminApiClient {
   ) {}
 
   async login(
-    kind: 'staff' | 'platform',
+    kind: 'staff' | 'partner' | 'platform',
     loginIdentifier: string,
     password: string,
   ): Promise<AuthenticationChallenge> {
@@ -58,7 +58,7 @@ export class AdminApiClient {
   }
 
   async verifySecondFactor(
-    kind: 'staff' | 'platform',
+    kind: 'staff' | 'partner' | 'platform',
     challengeToken: string,
     code: string,
   ): Promise<AuthenticatedSession> {
@@ -613,6 +613,27 @@ export class AdminApiClient {
     }
     return body as T;
   }
+  // ===== 合作方内容门户（ADR-0009：仅已发布内容，零学生数据） =====
+
+  async getPartnerCourses(): Promise<
+    Array<{ id: string; title: string; mainLessonCount?: number }>
+  > {
+    return this.authenticatedRequest('/partner/content/courses');
+  }
+
+  async getPartnerSubjectCourses(): Promise<
+    Array<{
+      id: string;
+      subject: string;
+      gradeBand: string;
+      gradeLevel: number | null;
+      title: string;
+      chapterCount: number;
+    }>
+  > {
+    return this.authenticatedRequest('/partner/content/subject-courses');
+  }
+
   // ===== 学科内容库（平台治理；ADR-0009 内容只对合作方/家庭只读发布） =====
 
   async listSubjectCourses(): Promise<

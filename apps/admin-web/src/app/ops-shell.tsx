@@ -11,16 +11,17 @@ export type OpsNavKey =
   | 'moderation'
   | 'family'
   | 'leads'
-  | 'platform';
+  | 'platform'
+  | 'subject-courses'
+  | 'platform-leads';
 
 const STAFF_NAV: Array<{ key: OpsNavKey; href: string; label: string }> = [
   { key: 'desk', href: '/', label: '工作台' },
-  { key: 'classes', href: '/classes', label: '班级' },
-  { key: 'submissions', href: '/submissions', label: '提交' },
-  { key: 'feedback', href: '/feedback', label: '点评' },
-  { key: 'moderation', href: '/moderation', label: '审核' },
-  { key: 'family', href: '/family', label: '家庭' },
-  { key: 'leads', href: '/leads', label: '线索' },
+  { key: 'classes', href: '/teacher/classes', label: '班级' },
+  { key: 'submissions', href: '/teacher/submissions', label: '提交' },
+  { key: 'feedback', href: '/teacher/feedback', label: '点评' },
+  { key: 'moderation', href: '/teacher/moderation', label: '审核' },
+  { key: 'family', href: '/teacher/family', label: '家庭' },
 ];
 
 export function OpsShell({
@@ -48,6 +49,11 @@ export function OpsShell({
           key: 'subject-courses' as const,
           href: '/platform/subject-courses',
           label: '学科内容库',
+        },
+        {
+          key: 'platform-leads' as const,
+          href: '/platform/leads',
+          label: '线索 CRM',
         },
       ]
     : STAFF_NAV;
