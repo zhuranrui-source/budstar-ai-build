@@ -18,7 +18,12 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const ci = require('miniprogram-ci');
+const ci = require(
+  path.resolve(
+    import.meta.dirname,
+    '../apps/miniapp/node_modules/miniprogram-ci',
+  ),
+);
 
 const args = process.argv.slice(2);
 const flag = (name) => {
