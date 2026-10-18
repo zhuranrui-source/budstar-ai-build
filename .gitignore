@@ -19,3 +19,5 @@ apps/api/src/generated/
 # 学科互动实验室静态资源（本地导入，生产走 COS）
 apps/api/storage/
 .pnpm-store/
+private.*.key
+private.key

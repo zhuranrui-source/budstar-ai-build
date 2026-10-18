@@ -6,7 +6,9 @@
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "dev:weapp": "taro build --type weapp --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "upload:ci": "node ../../scripts/upload-miniapp.mjs",
+    "preview:ci": "node ../../scripts/upload-miniapp.mjs --preview"
   },
   "dependencies": {
     "@budstar/contracts": "workspace:*",
@@ -24,6 +26,7 @@
     "@tarojs/webpack5-runner": "4.1.2",
     "@types/react": "^19",
     "babel-preset-taro": "4.1.2",
+    "miniprogram-ci": "^2.1.31",
     "react-dom": "19.2.4",
     "typescript": "^5",
     "webpack": "5.91.0"
