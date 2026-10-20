@@ -59,8 +59,32 @@ export class CrmLeadsController {
   }
 
   @Get('funnel')
-  funnel(@Req() request: AuthenticatedRequest) {
-    return this.crmLeads.funnel(this.requiredCampusId(request));
+  funnel(
+    @Req() request: AuthenticatedRequest,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.crmLeads.funnel(this.requiredCampusId(request), {
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+    });
+  }
+
+  @Get('trend')
+  trend(@Req() request: AuthenticatedRequest, @Query('days') days?: string) {
+    const parsed = days ? Number(days) : 14;
+    return this.crmLeads.trend(
+      this.requiredCampusId(request),
+      Number.isFinite(parsed) && parsed > 0 && parsed <= 90
+        ? Math.floor(parsed)
+        : 14,
+    );
+  }
+
+  @Get(':id/phone')
+  @AuditBusinessWrite('lead-phone-reveal')
+  phone(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.crmLeads.getLeadPhone(this.requiredCampusId(request), id);
   }
 
   @Get(':id/history')

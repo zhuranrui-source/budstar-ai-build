@@ -83,6 +83,10 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState('');
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
+  const [funnelRange, setFunnelRange] = useState('');
+  const [trend, setTrend] = useState<Array<{ date: string; count: number }>>(
+    [],
+  );
   const [nextContactDate, setNextContactDate] = useState('');
   const [query, setQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
@@ -111,7 +115,13 @@ export default function LeadsPage() {
       setLoading(true);
       setError('');
       try {
-        const [nextLeads, nextFunnel] = await Promise.all([
+        const days = funnelRange ? Number(funnelRange) : 0;
+        const range = days
+          ? {
+              from: new Date(Date.now() - days * 24 * 3600_000).toISOString(),
+            }
+          : undefined;
+        const [nextLeads, nextFunnel, nextTrend] = await Promise.all([
           client.listAppointmentLeads(campusId, {
             status: statusFilter || undefined,
             source: (sourceFilter || undefined) as
@@ -123,11 +133,13 @@ export default function LeadsPage() {
               | undefined,
             overdue: overdueOnly ? 'true' : undefined,
           }),
-          client.getLeadFunnel(campusId),
+          client.getLeadFunnel(campusId, range),
+          client.getLeadTrend(campusId, 14),
         ]);
         if (cancelled) return;
         setLeads(nextLeads);
         setFunnel(nextFunnel);
+        setTrend(nextTrend);
         setBootstrapped(true);
       } catch (cause) {
         if (cancelled) return;
@@ -150,7 +162,7 @@ export default function LeadsPage() {
     return () => {
       cancelled = true;
     };
-  }, [campusId, client, statusFilter, sourceFilter, overdueOnly]);
+  }, [campusId, client, statusFilter, sourceFilter, overdueOnly, funnelRange]);
 
   async function run(action: () => Promise<void>) {
     setLoading(true);
@@ -312,8 +324,54 @@ export default function LeadsPage() {
             </button>
           </form>
         </section>
+        {trend.length > 0 && (
+          <section aria-label="近14天新增线索" style={{ marginBottom: 16 }}>
+            <p style={{ margin: '0 0 6px' }}>近 14 天新增线索趋势</p>
+            <div
+              style={{
+                display: 'flex',
+                gap: 3,
+                alignItems: 'flex-end',
+                height: 48,
+              }}
+            >
+              {trend.map((day) => {
+                const max = Math.max(...trend.map((item) => item.count), 1);
+                return (
+                  <div
+                    key={day.date}
+                    title={`${day.date}：${day.count} 条`}
+                    style={{
+                      flex: 1,
+                      minWidth: 8,
+                      height: Math.max(4, (day.count / max) * 48),
+                      background: '#1f6f5c',
+                      borderRadius: 2,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
         {funnel && (
-          <section className="ops-summary" aria-label="线索漏斗">
+          <section aria-label="线索漏斗" style={{ marginBottom: 12 }}>
+            <label style={{ marginBottom: 8, display: 'block' }}>
+              漏斗时间段
+              <select
+                value={funnelRange}
+                onChange={(event) => setFunnelRange(event.target.value)}
+              >
+                <option value="">全部</option>
+                <option value="7">近 7 天</option>
+                <option value="30">近 30 天</option>
+                <option value="90">近 90 天</option>
+              </select>
+            </label>
+          </section>
+        )}
+        {funnel && (
+          <section className="ops-summary" aria-label="线索漏斗数据">
             {funnel.stages.map((stage) => (
               <article key={stage.status}>
                 <span>{stage.status}</span>
@@ -424,6 +482,22 @@ export default function LeadsPage() {
                   设置跟进提醒
                 </button>
               </form>
+              <button
+                type="button"
+                className="ops-primary"
+                disabled={loading}
+                onClick={() =>
+                  void run(async () => {
+                    const { phone } = await client.getLeadPhone(
+                      campusId,
+                      selectedLead.id,
+                    );
+                    window.location.href = `tel:${phone}`;
+                  })
+                }
+              >
+                📞 拨打电话（号码不展示）
+              </button>
               <form className="ops-form" onSubmit={saveNote}>
                 <label>
                   备注

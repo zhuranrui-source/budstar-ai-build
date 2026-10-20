@@ -26,8 +26,13 @@ export interface AppointmentLeadRepository {
   save(lead: AppointmentLeadRecord): Promise<AppointmentLeadRecord>;
 }
 
+import { sharedLeadRecords } from '../shared-lead-registry';
+
 export class InMemoryAppointmentLeadRepository implements AppointmentLeadRepository {
-  private readonly leads = new Map<string, AppointmentLeadRecord>();
+  private readonly leads = sharedLeadRecords as Map<
+    string,
+    AppointmentLeadRecord
+  >;
 
   findByIdempotencyKey(
     idempotencyKey: string,

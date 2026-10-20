@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { sharedLeadRecords } from '../shared-lead-registry';
 import {
   canTransitionAppointmentLead,
   requiresReopenReason,
@@ -71,7 +72,7 @@ export interface CrmLeadStore {
 }
 
 export class InMemoryCrmLeadStore implements CrmLeadStore {
-  private readonly leads = new Map<string, CrmLeadRecord>();
+  private readonly leads = sharedLeadRecords as Map<string, CrmLeadRecord>;
   private readonly history = new Map<string, CrmStatusHistoryRecord[]>();
   private readonly enrollments = new Map<string, CrmEnrollmentRecord>();
 
@@ -166,19 +167,46 @@ export class CrmLeadsService {
       .filter((lead) => {
         if (query.overdue === undefined) return true;
         const wantsOverdue = query.overdue === 'true';
-        const isOverdue = Boolean(
-          lead.nextContactAt && lead.nextContactAt <= now,
-        );
+        const nextAt = lead.nextContactAt
+          ? new Date(lead.nextContactAt).getTime()
+          : null;
+        const isOverdue = Boolean(nextAt && nextAt <= now.getTime());
         return wantsOverdue === isOverdue;
       })
       .map((lead) => this.toListItem(lead));
   }
 
   /**
+   * 每日新增线索趋势（ISSUE-09）：近 N 天逐日新线索数，为看板趋势打底。
+   */
+  async trend(
+    campusId: string,
+    days = 14,
+  ): Promise<Array<{ date: string; count: number }>> {
+    const leads = await this.store.list(campusId, {});
+    const byDay = new Map<string, number>();
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const day = new Date(Date.now() - i * 24 * 3600_000);
+      const key = day.toISOString().slice(0, 10);
+      byDay.set(key, 0);
+    }
+    for (const lead of leads) {
+      const created = new Date(lead.createdAt);
+      if (Number.isNaN(created.getTime())) continue;
+      const key = created.toISOString().slice(0, 10);
+      if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + 1);
+    }
+    return [...byDay.entries()].map(([date, count]) => ({ date, count }));
+  }
+
+  /**
    * 漏斗看板（ISSUE-09）：各阶段数量 + 逾期数 + 阶段间转化率。
    * 转化率口径：进入过某阶段的线索数 / 进入过前一阶段的线索数（基于状态历史）。
    */
-  async funnel(campusId: string): Promise<{
+  async funnel(
+    campusId: string,
+    range?: { from?: Date; to?: Date },
+  ): Promise<{
     stages: Array<{
       status: string;
       count: number;
@@ -190,7 +218,13 @@ export class CrmLeadsService {
       rate: number;
     }>;
   }> {
-    const leads = await this.store.list(campusId, {});
+    const leads = (await this.store.list(campusId, {})).filter((lead) => {
+      const created = new Date(lead.createdAt).getTime();
+      if (Number.isNaN(created)) return false;
+      if (range?.from && created < range.from.getTime()) return false;
+      if (range?.to && created > range.to.getTime()) return false;
+      return true;
+    });
     const now = new Date();
     const order = [
       'PENDING_CONTACT',
@@ -204,9 +238,12 @@ export class CrmLeadsService {
     for (const status of order) countBy.set(status, 0);
     for (const lead of leads) {
       countBy.set(lead.status, (countBy.get(lead.status) ?? 0) + 1);
+      const nextAt = lead.nextContactAt
+        ? new Date(lead.nextContactAt).getTime()
+        : null;
       if (
-        lead.nextContactAt &&
-        lead.nextContactAt <= now &&
+        nextAt &&
+        nextAt <= now.getTime() &&
         lead.status !== 'ENROLLED' &&
         lead.status !== 'CLOSED'
       ) {
@@ -235,6 +272,15 @@ export class CrmLeadsService {
       })),
       conversionRates,
     };
+  }
+
+  /** Click-to-call（ISSUE-09）：受权限保护的明文手机号，仅用于拨号，不落前端展示。 */
+  async getLeadPhone(
+    campusId: string,
+    leadId: string,
+  ): Promise<{ phone: string }> {
+    const lead = await this.requireCampusLead(campusId, leadId);
+    return { phone: lead.phone };
   }
 
   async getHistory(
@@ -386,6 +432,14 @@ export class CrmLeadsService {
     return lead;
   }
 
+  /** 共享注册表可能收到不同写入方的日期形态（Date/ISO 字符串/缺失），统一安全序列化。 */
+  private static iso(value: Date | string | null | undefined): string | null {
+    if (!value) return null;
+    if (value instanceof Date) return value.toISOString();
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
   private toListItem(lead: CrmLeadRecord): AppointmentLeadListItem {
     return {
       id: lead.id,
@@ -398,10 +452,12 @@ export class CrmLeadsService {
       status: lead.status,
       assigneeAccountId: lead.assigneeAccountId,
       note: lead.note,
-      source: lead.source as AppointmentLeadListItem['source'],
-      nextContactAt: lead.nextContactAt?.toISOString() ?? null,
-      createdAt: lead.createdAt.toISOString(),
-      updatedAt: lead.updatedAt.toISOString(),
+      source: (lead.source ?? null) as AppointmentLeadListItem['source'],
+      nextContactAt: CrmLeadsService.iso(lead.nextContactAt),
+      createdAt:
+        CrmLeadsService.iso(lead.createdAt) ?? new Date(0).toISOString(),
+      updatedAt:
+        CrmLeadsService.iso(lead.updatedAt) ?? new Date(0).toISOString(),
     };
   }
 }

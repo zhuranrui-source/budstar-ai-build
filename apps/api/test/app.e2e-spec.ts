@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
+import { resetSharedLeadRecords } from '../src/shared-lead-registry';
 
 describe('public API (e2e)', () => {
   let app: INestApplication<App>;
@@ -17,6 +18,7 @@ describe('public API (e2e)', () => {
   };
 
   beforeEach(async () => {
+    resetSharedLeadRecords();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

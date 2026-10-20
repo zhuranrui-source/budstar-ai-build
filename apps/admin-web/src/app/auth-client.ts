@@ -431,12 +431,39 @@ export class AdminApiClient {
     >(`/admin/appointment-leads${suffix}`, campusId);
   }
 
-  async getLeadFunnel(campusId: string): Promise<{
+  async getLeadFunnel(
+    campusId: string,
+    range?: { from?: string; to?: string },
+  ): Promise<{
     stages: Array<{ status: string; count: number; overdue: number }>;
     conversionRates: Array<{ from: string; to: string; rate: number }>;
   }> {
+    const params = new URLSearchParams();
+    if (range?.from) params.set('from', range.from);
+    if (range?.to) params.set('to', range.to);
+    const suffix = params.toString() ? `?${params}` : '';
     return this.authenticatedRequest(
-      '/admin/appointment-leads/funnel',
+      `/admin/appointment-leads/funnel${suffix}`,
+      campusId,
+    );
+  }
+
+  async getLeadTrend(
+    campusId: string,
+    days = 14,
+  ): Promise<Array<{ date: string; count: number }>> {
+    return this.authenticatedRequest(
+      `/admin/appointment-leads/trend?days=${days}`,
+      campusId,
+    );
+  }
+
+  async getLeadPhone(
+    campusId: string,
+    leadId: string,
+  ): Promise<{ phone: string }> {
+    return this.authenticatedRequest(
+      `/admin/appointment-leads/${leadId}/phone`,
       campusId,
     );
   }

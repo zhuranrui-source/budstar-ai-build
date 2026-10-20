@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { CrmLeadsService, InMemoryCrmLeadStore } from './crm-leads.service';
+import { resetSharedLeadRecords } from '../shared-lead-registry';
+
+beforeEach(() => resetSharedLeadRecords());
 
 describe('CrmLeadsService', () => {
   it('masks phones, rejects illegal jumps, and requires reopen reasons', async () => {
