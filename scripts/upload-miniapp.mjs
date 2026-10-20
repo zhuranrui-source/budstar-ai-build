@@ -64,8 +64,8 @@ async function main() {
       project,
       desc,
       setting: { es6: true, minify: true },
-      qrcodeFormat: 'base64',
-      qrcodeOutputDest: path.join(projectRoot, 'dist/preview-qrcode.txt'),
+      qrcodeFormat: 'image',
+      qrcodeOutputDest: path.join(projectRoot, 'dist/preview-qr.png'),
       onProgressUpdate: () => {},
     });
     console.log(
