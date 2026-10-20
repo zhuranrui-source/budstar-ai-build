@@ -59,6 +59,8 @@ export class PrismaCrmLeadStore implements CrmLeadStore {
         status: lead.status,
         assigneeAccountId: lead.assigneeAccountId,
         note: lead.note,
+        source: lead.source,
+        nextContactAt: lead.nextContactAt,
         updatedAt: lead.updatedAt,
       },
     });
@@ -166,6 +168,8 @@ export class PrismaCrmLeadStore implements CrmLeadStore {
     status: AppointmentLeadStatus;
     assigneeAccountId: string | null;
     note: string | null;
+    source?: string | null;
+    nextContactAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
   }): CrmLeadRecord {
@@ -180,6 +184,8 @@ export class PrismaCrmLeadStore implements CrmLeadStore {
       status: row.status,
       assigneeAccountId: row.assigneeAccountId,
       note: row.note,
+      source: row.source ?? null,
+      nextContactAt: row.nextContactAt ?? null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

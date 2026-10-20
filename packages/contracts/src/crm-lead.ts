@@ -4,10 +4,20 @@ import {
   type AppointmentLeadStatus,
 } from './appointment-lead';
 
+export const leadSourceOptions = [
+  'OFFICIAL_SITE',
+  'REFERRAL',
+  'OFFLINE',
+  'PARTNER',
+  'OTHER',
+] as const;
+export const leadSourceSchema = z.enum(leadSourceOptions);
 export const listAppointmentLeadsQuerySchema = z.object({
   status: appointmentLeadStatusSchema.optional(),
   assigneeAccountId: z.string().uuid().optional(),
   q: z.string().trim().min(1).max(100).optional(),
+  source: leadSourceSchema.optional(),
+  overdue: z.enum(['true', 'false']).optional(),
 });
 
 export type ListAppointmentLeadsQuery = z.infer<
@@ -39,11 +49,16 @@ export const updateAppointmentLeadSchema = z
   .object({
     assigneeAccountId: z.string().uuid().nullable().optional(),
     note: z.string().trim().max(2000).nullable().optional(),
+    source: leadSourceSchema.optional(),
+    nextContactAt: z.string().datetime().nullable().optional(),
   })
   .strict()
   .refine(
     (value) =>
-      value.assigneeAccountId !== undefined || value.note !== undefined,
+      value.assigneeAccountId !== undefined ||
+      value.note !== undefined ||
+      value.source !== undefined ||
+      value.nextContactAt !== undefined,
     { message: '至少提供一个可更新字段' },
   );
 
@@ -74,6 +89,8 @@ export const appointmentLeadListItemSchema = z
     status: appointmentLeadStatusSchema,
     assigneeAccountId: z.string().uuid().nullable(),
     note: z.string().nullable(),
+    source: leadSourceSchema.nullable(),
+    nextContactAt: z.string().datetime().nullable(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

@@ -402,7 +402,12 @@ export class AdminApiClient {
 
   async listAppointmentLeads(
     campusId: string,
-    query: { status?: string; q?: string } = {},
+    query: {
+      status?: string;
+      q?: string;
+      source?: 'OFFICIAL_SITE' | 'REFERRAL' | 'OFFLINE' | 'PARTNER' | 'OTHER';
+      overdue?: 'true' | 'false';
+    } = {},
   ) {
     const params = new URLSearchParams();
     if (query.status) params.set('status', query.status);
@@ -419,15 +424,32 @@ export class AdminApiClient {
         status: string;
         assigneeAccountId: string | null;
         note: string | null;
+        source: string | null;
+        nextContactAt: string | null;
         createdAt: string;
       }>
     >(`/admin/appointment-leads${suffix}`, campusId);
   }
 
+  async getLeadFunnel(campusId: string): Promise<{
+    stages: Array<{ status: string; count: number; overdue: number }>;
+    conversionRates: Array<{ from: string; to: string; rate: number }>;
+  }> {
+    return this.authenticatedRequest(
+      '/admin/appointment-leads/funnel',
+      campusId,
+    );
+  }
+
   async updateAppointmentLead(
     campusId: string,
     leadId: string,
-    body: { assigneeAccountId?: string | null; note?: string | null },
+    body: {
+      assigneeAccountId?: string | null;
+      note?: string | null;
+      source?: string;
+      nextContactAt?: string | null;
+    },
   ) {
     return this.authenticatedRequest(
       `/admin/appointment-leads/${leadId}`,

@@ -18,8 +18,26 @@ type LeadItem = {
   preferredContactTime: string;
   status: string;
   note: string | null;
+  source: string | null;
+  nextContactAt: string | null;
   createdAt: string;
 };
+
+type FunnelData = {
+  stages: Array<{ status: string; count: number; overdue: number }>;
+  conversionRates: Array<{ from: string; to: string; rate: number }>;
+};
+
+const SOURCE_OPTIONS = [
+  ['OFFICIAL_SITE', '官网'],
+  ['REFERRAL', '转介绍'],
+  ['OFFLINE', '地推'],
+  ['PARTNER', '合作方'],
+  ['OTHER', '其他'],
+] as const;
+
+const SOURCE_LABELS: Record<string, string> =
+  Object.fromEntries(SOURCE_OPTIONS);
 
 type HistoryItem = {
   id: string;
@@ -62,6 +80,10 @@ export default function LeadsPage() {
       : (window.sessionStorage.getItem(CAMPUS_KEY) ?? '');
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [funnel, setFunnel] = useState<FunnelData | null>(null);
+  const [nextContactDate, setNextContactDate] = useState('');
   const [query, setQuery] = useState('');
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -89,11 +111,23 @@ export default function LeadsPage() {
       setLoading(true);
       setError('');
       try {
-        const nextLeads = await client.listAppointmentLeads(campusId, {
-          status: statusFilter || undefined,
-        });
+        const [nextLeads, nextFunnel] = await Promise.all([
+          client.listAppointmentLeads(campusId, {
+            status: statusFilter || undefined,
+            source: (sourceFilter || undefined) as
+              | 'OFFICIAL_SITE'
+              | 'REFERRAL'
+              | 'OFFLINE'
+              | 'PARTNER'
+              | 'OTHER'
+              | undefined,
+            overdue: overdueOnly ? 'true' : undefined,
+          }),
+          client.getLeadFunnel(campusId),
+        ]);
         if (cancelled) return;
         setLeads(nextLeads);
+        setFunnel(nextFunnel);
         setBootstrapped(true);
       } catch (cause) {
         if (cancelled) return;
@@ -116,7 +150,7 @@ export default function LeadsPage() {
     return () => {
       cancelled = true;
     };
-  }, [campusId, client, statusFilter]);
+  }, [campusId, client, statusFilter, sourceFilter, overdueOnly]);
 
   async function run(action: () => Promise<void>) {
     setLoading(true);
@@ -244,6 +278,28 @@ export default function LeadsPage() {
               </select>
             </label>
             <label>
+              来源
+              <select
+                value={sourceFilter}
+                onChange={(event) => setSourceFilter(event.target.value)}
+              >
+                <option value="">全部</option>
+                {SOURCE_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={overdueOnly}
+                onChange={(event) => setOverdueOnly(event.target.checked)}
+              />
+              仅看逾期未跟进
+            </label>
+            <label>
               关键词
               <input
                 value={query}
@@ -256,14 +312,61 @@ export default function LeadsPage() {
             </button>
           </form>
         </section>
+        {funnel && (
+          <section className="ops-summary" aria-label="线索漏斗">
+            {funnel.stages.map((stage) => (
+              <article key={stage.status}>
+                <span>{stage.status}</span>
+                <strong>{stage.count}</strong>
+                <small>
+                  {stage.overdue > 0
+                    ? `⚠ 逾期 ${stage.overdue} 条`
+                    : funnel.conversionRates.find(
+                          (rate) => rate.to === stage.status,
+                        )?.rate !== undefined
+                      ? `转化 ${
+                          funnel.conversionRates.find(
+                            (rate) => rate.to === stage.status,
+                          )!.rate
+                        }%`
+                      : '—'}
+                </small>
+              </article>
+            ))}
+          </section>
+        )}
         <section className="ops-class-list">
           {leads.map((lead) => (
-            <article key={lead.id}>
-              <span>{lead.status}</span>
+            <article
+              key={lead.id}
+              style={
+                lead.nextContactAt &&
+                new Date(lead.nextContactAt) <= new Date() &&
+                lead.status !== 'ENROLLED' &&
+                lead.status !== 'CLOSED'
+                  ? { borderLeft: '3px solid #c0392b' }
+                  : undefined
+              }
+            >
+              <span>
+                {lead.status}
+                {lead.source
+                  ? ` · ${SOURCE_LABELS[lead.source] ?? lead.source}`
+                  : ''}
+                {lead.nextContactAt &&
+                new Date(lead.nextContactAt) <= new Date() &&
+                lead.status !== 'ENROLLED' &&
+                lead.status !== 'CLOSED'
+                  ? ' · ⚠逾期'
+                  : ''}
+              </span>
               <strong>{lead.parentName}</strong>
               <small>
                 {lead.phoneMasked} · {lead.interestedCourse} ·{' '}
                 {lead.childAgeOrGrade}
+                {lead.nextContactAt
+                  ? ` · 下次 ${new Date(lead.nextContactAt).toLocaleString('zh-CN')}`
+                  : ''}
               </small>
               <button
                 type="button"
@@ -286,6 +389,41 @@ export default function LeadsPage() {
                 {selectedLead.preferredContactTime} ·{' '}
                 {selectedLead.interestedCourse}
               </p>
+              <form
+                className="ops-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void run(async () => {
+                    await client.updateAppointmentLead(
+                      campusId,
+                      selectedLead.id,
+                      {
+                        nextContactAt: nextContactDate
+                          ? new Date(nextContactDate).toISOString()
+                          : null,
+                      },
+                    );
+                    await refresh();
+                    await openLead(
+                      (await client.listAppointmentLeads(campusId, {})).find(
+                        (item) => item.id === selectedLead.id,
+                      ) ?? selectedLead,
+                    );
+                  });
+                }}
+              >
+                <label>
+                  下一步跟进时间（ISSUE-09：无下一步动作的线索是死线索）
+                  <input
+                    type="datetime-local"
+                    value={nextContactDate}
+                    onChange={(event) => setNextContactDate(event.target.value)}
+                  />
+                </label>
+                <button className="ops-primary" disabled={loading}>
+                  设置跟进提醒
+                </button>
+              </form>
               <form className="ops-form" onSubmit={saveNote}>
                 <label>
                   备注

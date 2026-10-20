@@ -58,6 +58,11 @@ export class CrmLeadsController {
     return this.crmLeads.list(this.requiredCampusId(request), parsed.data);
   }
 
+  @Get('funnel')
+  funnel(@Req() request: AuthenticatedRequest) {
+    return this.crmLeads.funnel(this.requiredCampusId(request));
+  }
+
   @Get(':id/history')
   history(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
     return this.crmLeads.getHistory(this.requiredCampusId(request), id);

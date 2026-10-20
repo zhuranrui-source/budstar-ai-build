@@ -347,6 +347,8 @@ model AppointmentLead {
   status               AppointmentLeadStatus          @default(PENDING_CONTACT)
   assigneeAccountId    String?                        @db.Uuid
   note                 String?                        @db.VarChar(2000)
+  source               String?                        @db.VarChar(32)
+  nextContactAt        DateTime?
   createdAt            DateTime                       @default(now())
   updatedAt            DateTime                       @updatedAt
   campus               Campus                         @relation(fields: [campusId], references: [id], onDelete: Restrict)
@@ -355,6 +357,7 @@ model AppointmentLead {
   enrollmentRecord     EnrollmentRecord?
 
   @@index([campusId, status, createdAt])
+  @@index([campusId, nextContactAt])
   @@index([inputFingerprint, createdAt])
   @@index([campusId, assigneeAccountId])
 }
