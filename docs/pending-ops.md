@@ -10,16 +10,16 @@
 
 ## P0 — 试点上线前必须完成
 
-| ID     | 事项                       | 现状                   | 要做什么                                                                       | 参考                                                                      |
-| ------ | -------------------------- | ---------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| OPS-01 | 腾讯云大陆 PostgreSQL      | 仅有本地/CI 连接串样例 | 开通实例，写入生产 `DATABASE_URL`，执行 `db:migrate:deploy` + `db:seed`        | `.env.example`、`docs/tencent-cloud-production.md`                        |
-| OPS-02 | 腾讯云短信 OTP             | 本地固定验证码         | 配置 `TENCENT_SMS_*`，去掉生产对本地码的依赖；验证家长登录真发短信             | `.env.example`、`apps/api/src/auth/production-authentication-adapters.ts` |
-| OPS-03 | 员工二次验证供应方         | mock / fail-closed     | 配置 `SECOND_FACTOR_VERIFY_URL` + `SECOND_FACTOR_BEARER_TOKEN`（或选定供应商） | 同上                                                                      |
-| OPS-04 | 腾讯云 COS                 | 本地磁盘 adapter       | 设 `OBJECT_STORAGE_PROVIDER=cos` 及 Secret/Bucket/Region；验证预签名上传       | `apps/api/src/object-storage/`、`docs/tencent-cloud-production.md`        |
-| OPS-05 | HTTPS + CORS 生产白名单    | 本地 localhost         | 证书、仅 HTTPS 入口；`CORS_ORIGINS` 改为真实域名                               | `docs/tencent-cloud-production.md`                                        |
-| OPS-06 | 密钥与 `AUTH_TOKEN_SECRET` | 测试密钥               | 用 SSM/环境注入生产密钥，禁止入库、禁止进前端包                                | ADR-0005、`.env.example`                                                  |
-| OPS-07 | Staging / Prod 隔离        | 文档有清单             | 分库分桶（或分账号），Staging 先演练再 Prod                                    | `docs/tencent-cloud-production.md`                                        |
-| OPS-08 | 备份恢复演练               | 未做                   | PostgreSQL 日备 + 一次恢复验证                                                 | `docs/tencent-cloud-production.md`                                        |
+| ID     | 事项                       | 现状                                                                                                                                  | 要做什么                                                                       | 参考                                                                      |
+| ------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| OPS-01 | 腾讯云大陆 PostgreSQL      | 仅有本地/CI 连接串样例                                                                                                                | 开通实例，写入生产 `DATABASE_URL`，执行 `db:migrate:deploy` + `db:seed`        | `.env.example`、`docs/tencent-cloud-production.md`                        |
+| OPS-02 | 腾讯云短信 OTP             | 本地固定验证码                                                                                                                        | 配置 `TENCENT_SMS_*`，去掉生产对本地码的依赖；验证家长登录真发短信             | `.env.example`、`apps/api/src/auth/production-authentication-adapters.ts` |
+| OPS-03 | 员工二次验证供应方         | mock / fail-closed                                                                                                                    | 配置 `SECOND_FACTOR_VERIFY_URL` + `SECOND_FACTOR_BEARER_TOKEN`（或选定供应商） | 同上                                                                      |
+| OPS-04 | 腾讯云 COS                 | 本地磁盘 adapter                                                                                                                      | 设 `OBJECT_STORAGE_PROVIDER=cos` 及 Secret/Bucket/Region；验证预签名上传       | `apps/api/src/object-storage/`、`docs/tencent-cloud-production.md`        |
+| OPS-05 | HTTPS + CORS 生产白名单    | 域名 budstar-ai.site 已购（企业实名变更中）；生产主机=轻量应用服务器 lhins-nkv81kx8 / 106.54.203.207 上海；备案授权码已生成并提交备案 | 证书、仅 HTTPS 入口；`CORS_ORIGINS` 改为真实域名                               | `docs/tencent-cloud-production.md`                                        |
+| OPS-06 | 密钥与 `AUTH_TOKEN_SECRET` | 测试密钥                                                                                                                              | 用 SSM/环境注入生产密钥，禁止入库、禁止进前端包                                | ADR-0005、`.env.example`                                                  |
+| OPS-07 | Staging / Prod 隔离        | 文档有清单                                                                                                                            | 分库分桶（或分账号），Staging 先演练再 Prod                                    | `docs/tencent-cloud-production.md`                                        |
+| OPS-08 | 备份恢复演练               | 未做                                                                                                                                  | PostgreSQL 日备 + 一次恢复验证                                                 | `docs/tencent-cloud-production.md`                                        |
 
 ## P1 — 体验与观测增强
 
