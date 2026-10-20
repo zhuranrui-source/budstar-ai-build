@@ -1,5 +1,5 @@
 {
-  "appid": "touristappid",
+  "appid": "wxf65559b52922fbba",
   "projectname": "budstar-family",
   "compileType": "miniprogram",
   "miniprogramRoot": "dist/",
@@ -8,5 +8,5 @@
     "minified": true,
     "urlCheck": false
   },
-  "description": "BudStar 家庭视图小程序（appid 待 ISSUE-08 注册后替换）"
+  "description": "BudStar 家庭视图小程序（深圳星芽创想科技有限公司）"
 }
