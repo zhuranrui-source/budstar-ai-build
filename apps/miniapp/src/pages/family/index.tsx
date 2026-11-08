@@ -1,66 +1,28 @@
 import { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Button,
-  ScrollView,
-  Input,
-  Textarea,
-} from '@tarojs/components';
+import { View, Text, Button, ScrollView, Input, Textarea } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import {
-  listBoundStudents,
-  selectActiveStudent,
-  listStudentClasses,
-  getStudentCurriculum,
-  transitionSubmission,
-  listPublishedSubjectCourses,
-  listPlanetFeed,
-  getGrowthView,
-  saveSubmissionDraft,
-  type Curriculum,
-  type SubjectCourseSummary,
-  type StudentSwitcher,
-  type PlanetPost,
-  type GrowthViewData,
+  listBoundStudents, selectActiveStudent, listStudentClasses, getStudentCurriculum,
+  transitionSubmission, saveSubmissionDraft, listPublishedSubjectCourses,
+  listPlanetFeed, getGrowthView, saveSubmissionDraft as saveDraft,
+  type Curriculum, type SubjectCourseSummary, type StudentSwitcher,
+  type PlanetPost, type GrowthViewData,
 } from '../../utils/family-api';
 
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH: '数学',
-  CHINESE: '语文',
-  ENGLISH: '英语',
-  PHYSICS: '物理',
-  CHEMISTRY: '化学',
-  BIOLOGY: '生物',
-  HISTORY: '历史',
-  GEOGRAPHY: '地理',
-  POLITICS: '道法',
-  OTHER: '其他',
+const SUBJECT: Record<string, string> = {
+  MATH: '数学', CHINESE: '语文', ENGLISH: '英语', PHYSICS: '物理',
+  CHEMISTRY: '化学', BIOLOGY: '生物', OTHER: '其他',
 };
 
-const GRADE_LABELS: Record<string, string> = {
-  PRIMARY: '小学',
-  JUNIOR_HIGH: '初中',
-  SENIOR_HIGH: '高中',
-  GENERAL: '全学段',
-};
-
-/**
- * 家庭视图（ADR-0007）：家长与学生共用——
- * 学生档案切换、课节与作品（亲子共学）、学科互动实验室、星球与报告入口。
- */
 export default function FamilyPage() {
   const [switcher, setSwitcher] = useState<StudentSwitcher | null>(null);
   const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
   const [subjects, setSubjects] = useState<SubjectCourseSummary[]>([]);
+  const [planet, setPlanet] = useState<PlanetPost[]>([]);
+  const [growth, setGrowth] = useState<GrowthViewData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [planet, setPlanet] = useState<PlanetPost[]>([]);
-  const [growthView, setGrowthView] = useState<GrowthViewData | null>(null);
-  const [draftLesson, setDraftLesson] = useState<{
-    mainLessonId: string;
-    track: string;
-  } | null>(null);
+  const [draftLesson, setDraftLesson] = useState<{ mainLessonId: string; classId: string; track: string } | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
   const [draftDesc, setDraftDesc] = useState('');
   const [draftUrl, setDraftUrl] = useState('');
@@ -68,228 +30,142 @@ export default function FamilyPage() {
   const token = Taro.getStorageSync('accessToken') as string;
 
   useEffect(() => {
-    void reloadAll();
-    // 学科内容目录：家长 token 经家庭读取面获取（ADR-0007）
-    if (token) {
-      listPublishedSubjectCourses(token)
-        .then(setSubjects)
-        .catch(() => setSubjects([]));
-    }
+    if (!token) { Taro.navigateTo({ url: '/pages/login/index' }); return; }
+    void reload();
+    listPlanetFeed(token).then(setPlanet).catch(() => setPlanet([]));
   }, []);
 
-  async function reloadAll() {
-    if (!token) {
-      setError('请先登录');
-      return;
-    }
-    setLoading(true);
-    setError('');
+  async function reload() {
+    setLoading(true); setError('');
     try {
-      const next = await listBoundStudents(token);
-      setSwitcher(next);
-      listPlanetFeed(token)
-        .then(setPlanet)
-        .catch(() => setPlanet([]));
-      const selected = next.selectedStudentProfileId;
-      if (selected) {
-        await loadCurriculum(selected);
-        getGrowthView(token, selected)
-          .then(setGrowthView)
-          .catch(() => setGrowthView(null));
+      const sw = await listBoundStudents(token);
+      setSwitcher(sw);
+      const sel = sw.selectedStudentProfileId;
+      if (sel) {
+        const cs = await listStudentClasses(token, sel);
+        if (cs.length > 0) setCurriculum(await getStudentCurriculum(token, sel, cs[0].classId));
+        else setCurriculum(null);
+        getGrowthView(token, sel).then(setGrowth).catch(() => {});
       }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
+    } catch (c) { setError(c instanceof Error ? c.message : '加载失败'); }
+    finally { setLoading(false); }
   }
 
-  async function loadCurriculum(studentProfileId: string) {
-    const classes = await listStudentClasses(token, studentProfileId);
-    if (classes.length === 0) {
-      setCurriculum(null);
-      return;
-    }
-    setCurriculum(
-      await getStudentCurriculum(token, studentProfileId, classes[0].classId),
-    );
+  async function switchStudent(id: string) {
+    setLoading(true);
+    try { await selectActiveStudent(token, id); await reload(); }
+    catch (c) { setError(c instanceof Error ? c.message : '切换失败'); }
+    finally { setLoading(false); }
   }
 
-  async function handleSwitch(studentProfileId: string) {
+  async function submitWork(lesson: { submission: { id: string; status: string } | null }) {
+    if (!lesson.submission || !switcher?.selectedStudentProfileId) return;
+    const to = lesson.submission.status === 'SUBMITTED' ? 'RESUBMITTED' : 'SUBMITTED';
     setLoading(true);
     try {
-      await selectActiveStudent(token, studentProfileId);
-      await reloadAll();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '切换失败');
-    } finally {
-      setLoading(false);
-    }
+      await transitionSubmission(token, switcher.selectedStudentProfileId, lesson.submission.id, to);
+      await reload();
+    } catch (c) { setError(c instanceof Error ? c.message : '提交失败'); }
+    finally { setLoading(false); }
   }
 
-  async function handleSaveDraft() {
+  async function saveAndSubmit() {
     const student = switcher?.selectedStudentProfileId;
-    const classId = curriculum?.classId;
-    if (!student || !classId || !draftLesson) return;
-    if (!draftTitle.trim() || !draftDesc.trim()) {
-      setError('请填写作品标题和说明');
-      return;
-    }
-    setLoading(true);
-    setError('');
+    if (!student || !curriculum || !draftLesson) return;
+    if (!draftTitle.trim() || !draftDesc.trim()) { setError('请填标题和说明'); return; }
+    setLoading(true); setError('');
     try {
-      const content: {
-        title: string;
-        description: string;
-        imageUrls?: string[];
-        workUrl?: string;
-      } = { title: draftTitle.trim(), description: draftDesc.trim() };
-      if (draftUrl.trim()) content.workUrl = draftUrl.trim();
-      if (draftLesson.track === 'VIBE_CODING' && !content.workUrl) {
-        setError('Vibe Coding 作品需要提供链接');
-        return;
-      }
-      const draft = await saveSubmissionDraft(token, student, {
-        classId,
-        mainLessonId: draftLesson.mainLessonId,
-        content,
+      const draft = await saveDraft(token, student, {
+        classId: curriculum.classId, mainLessonId: draftLesson.mainLessonId,
+        content: { title: draftTitle.trim(), description: draftDesc.trim(), workUrl: draftUrl.trim() || undefined },
       });
       await transitionSubmission(token, student, draft.id, 'SUBMITTED');
-      setDraftLesson(null);
-      await loadCurriculum(student);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '提交失败，请重试');
-    } finally {
-      setLoading(false);
-    }
+      setDraftLesson(null); setDraftTitle(''); setDraftDesc(''); setDraftUrl('');
+      await reload();
+    } catch (c) { setError(c instanceof Error ? c.message : '提交失败'); }
+    finally { setLoading(false); }
   }
 
-  async function handleSubmit(lesson: {
-    submission: { id: string; status: string } | null;
-  }) {
-    if (!lesson.submission || !switcher?.selectedStudentProfileId) return;
-    const toStatus =
-      lesson.submission.status === 'SUBMITTED' ? 'RESUBMITTED' : 'SUBMITTED';
-    setLoading(true);
-    try {
-      await transitionSubmission(
-        token,
-        switcher.selectedStudentProfileId,
-        lesson.submission.id,
-        toStatus,
-      );
-      await loadCurriculum(switcher.selectedStudentProfileId);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '提交失败');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const selected = switcher?.students.find((s) => s.studentProfileId === switcher?.selectedStudentProfileId);
 
   return (
-    <ScrollView scrollY className="family-page">
-      <View className="family-section">
-        <Text className="family-title">家庭视图</Text>
-        <Text className="family-subtitle">亲子共学 · 家长学生共用</Text>
-        {error ? <Text className="family-error">{error}</Text> : null}
-        {loading ? <Text>加载中…</Text> : null}
+    <ScrollView scrollY className='page'>
+      <View className='section'>
+        <Text className='h1'>家庭视图</Text>
+        <Text className='sub'>亲子共学 · 家长学生共用</Text>
       </View>
 
+      {error ? <View className='err-box'><Text className='err'>{error}</Text></View> : null}
+      {loading ? <Text className='muted'>加载中…</Text> : null}
+
       {switcher && switcher.students.length > 0 && (
-        <View className="family-section">
-          <Text className="family-h2">学生切换（档案选择）</Text>
-          <View className="family-students">
-            {switcher.students.map((student) => (
-              <Button
-                key={student.studentProfileId}
-                size="mini"
-                type={
-                  student.studentProfileId === switcher.selectedStudentProfileId
-                    ? 'primary'
-                    : 'default'
-                }
-                onClick={() => void handleSwitch(student.studentProfileId)}
-              >
-                {student.displayName}
+        <View className='section'>
+          <Text className='h2'>学生切换</Text>
+          <View className='chips'>
+            {switcher.students.map((s) => (
+              <Button key={s.studentProfileId} size='mini' type={s.studentProfileId === switcher.selectedStudentProfileId ? 'primary' : 'default'}
+                onClick={() => void switchStudent(s.studentProfileId)}>
+                {s.displayName}
               </Button>
             ))}
           </View>
         </View>
       )}
 
-      <View className="family-section">
-        <Text className="family-h2">课节与作品</Text>
-        {curriculum ? (
-          <View>
-            <Text className="family-muted">
-              {curriculum.className} · {curriculum.coursePackageTitle} v
-              {curriculum.coursePackageVersion}
-            </Text>
-            {curriculum.lessons.map((lesson) => (
-              <View key={lesson.mainLessonId} className="family-lesson">
-                <Text>
-                  {lesson.sequence}. {lesson.title}
-                </Text>
-                <Text className="family-muted">
-                  {lesson.submission
-                    ? `作品：${lesson.submission.status}`
-                    : lesson.assignment
-                      ? '待提交'
-                      : '本节无作业'}
-                </Text>
-                {lesson.submission &&
-                ['DRAFT', 'NEEDS_REVISION', 'SUBMITTED'].includes(
-                  lesson.submission.status,
-                ) ? (
-                  <Button
-                    size="mini"
-                    disabled={loading}
-                    onClick={() => void handleSubmit(lesson)}
-                  >
-                    {lesson.submission.status === 'SUBMITTED'
-                      ? '重新提交'
-                      : '提交作品'}
-                  </Button>
-                ) : null}
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text className="family-muted">
-            当前学生暂未加入班级；入班后课节会出现在这里。
-          </Text>
-        )}
-      </View>
-
-      <View className="family-section">
-        <Text className="family-h2">学科互动实验室</Text>
-        {subjects.length === 0 ? (
-          <Text className="family-muted">
-            已发布学科内容将按年级出现在这里（管理端发布后可见）。
-          </Text>
-        ) : (
-          subjects.map((course) => (
-            <View key={course.id} className="family-lesson">
-              <Text>
-                {SUBJECT_LABELS[course.subject] ?? course.subject} ·{' '}
-                {course.title}
+      {curriculum && (
+        <View className='section'>
+          <Text className='h2'>课节与作品</Text>
+          <Text className='muted'>{curriculum.className} · {curriculum.coursePackageTitle}</Text>
+          {curriculum.lessons.map((lesson) => (
+            <View key={lesson.mainLessonId} className='card'>
+              <Text className='card-title'>{lesson.sequence}. {lesson.title}</Text>
+              <Text className='card-sub'>
+                {lesson.submission ? `作品：${lesson.submission.status}` : lesson.assignment ? '待提交' : '无作业'}
               </Text>
-              <Text className="family-muted">
-                {GRADE_LABELS[course.gradeBand] ?? course.gradeBand}
-                {course.gradeLevel ? ` ${course.gradeLevel} 年级` : ''} ·{' '}
-                {course.chapterCount} 章
-              </Text>
+              {lesson.submission && ['DRAFT', 'NEEDS_REVISION', 'SUBMITTED'].includes(lesson.submission.status) && (
+                <Button size='mini' type='primary' disabled={loading} onClick={() => void submitWork(lesson)}>
+                  {lesson.submission.status === 'SUBMITTED' ? '重新提交' : '提交作品'}
+                </Button>
+              )}
             </View>
-          ))
-        )}
+          ))}
+        </View>
+      )}
+
+      {draftLesson && (
+        <View className='section card'>
+          <Text className='h2'>写作品</Text>
+          <Input className='ipt' placeholder='作品标题' value={draftTitle} onInput={(e) => setDraftTitle(e.detail.value)} />
+          <Textarea className='ipt ta' placeholder='作品说明' value={draftDesc} onInput={(e) => setDraftDesc(e.detail.value)} maxlength={2000} />
+          <Input className='ipt' placeholder='作品链接（可选）' value={draftUrl} onInput={(e) => setDraftUrl(e.detail.value)} />
+          <View className='row-btns'>
+            <Button size='mini' type='primary' loading={loading} onClick={() => void saveAndSubmit()}>保存并提交</Button>
+            <Button size='mini' onClick={() => setDraftLesson(null)}>取消</Button>
+          </View>
+        </View>
+      )}
+
+      <View className='section'>
+        <Text className='h2'>星芽星球</Text>
+        {planet.length === 0 ? <Text className='muted'>暂无可见内容。</Text> : planet.map((p) => (
+          <View key={p.id} className='card'>
+            <Text className='card-title'>{p.title}</Text>
+            <Text className='card-sub'>{p.studentDisplayName} · {p.visibilityScope === 'FAMILY' ? '家庭' : p.visibilityScope === 'CLASS' ? '班级' : '校区'}</Text>
+          </View>
+        ))}
       </View>
 
-      <View className="family-section">
-        <Text className="family-h2">星芽星球与成长报告</Text>
-        <Text className="family-muted">
-          封闭社区与成长报告在下一版接入（家庭视图不展示五维数字等级）。
-        </Text>
-      </View>
+      {growth && growth.publishedReports.length > 0 && (
+        <View className='section'>
+          <Text className='h2'>成长报告</Text>
+          {growth.publishedReports.map((r) => (
+            <View key={r.id} className='card'>
+              <Text className='card-title'>第 {r.milestone} 节阶段报告</Text>
+              <Text className='card-sub'>{r.summary}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
