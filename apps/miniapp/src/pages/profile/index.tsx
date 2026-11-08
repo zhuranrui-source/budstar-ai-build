@@ -12,7 +12,7 @@ export default function ProfilePage() {
   function handleLogout() {
     Taro.removeStorageSync('accessToken');
     Taro.removeStorageSync('displayName');
-    Taro.navigateTo({ url: '/pages/login/index' });
+    Taro.reLaunch({ url: '/pages/login/index' });
   }
 
   return (

@@ -104,88 +104,23 @@ page {
   min-height: 160rpx;
 }
 
-/* ===== 登录页 ===== */
-.pg-login {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #1f6f5c 0%, #f5f5f5 40%);
-  padding: 120rpx 40rpx 40rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* ===== 登录页（沿用通用 section/h1/h2/sub/muted/ipt） ===== */
+.notice-box {
+  background: #eef6f3;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  margin-bottom: 24rpx;
 }
 
-.login-hero {
-  text-align: center;
-  margin-bottom: 80rpx;
-}
-
-.hero-icon {
-  font-size: 80rpx;
-  display: block;
-  margin-bottom: 12rpx;
-}
-
-.hero-title {
-  font-size: 44rpx;
-  font-weight: 700;
-  color: #1f6f5c;
-  display: block;
-}
-
-.hero-sub {
-  font-size: 26rpx;
-  color: #999;
-  display: block;
-  margin-top: 8rpx;
-}
-
-.login-card {
-  width: 100%;
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 40rpx 32rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-}
-
-.login-ok {
-  color: #1f6f5c;
-  font-size: 28rpx;
-  display: block;
-  margin-bottom: 20rpx;
-}
-
-.login-status {
-  color: #cf1322;
-  font-size: 26rpx;
-  display: block;
-  margin-top: 16rpx;
-}
-
-.login-toggle {
+.notice {
   color: #1f6f5c;
   font-size: 26rpx;
-  display: block;
-  text-align: center;
-  margin-top: 24rpx;
-}
-
-.login-footer {
-  font-size: 22rpx;
-  color: #bbb;
-  display: block;
-  text-align: center;
-  margin-top: 80rpx;
-}
-
-/* ===== SMS 登录 ===== */
-.sms-box {
-  margin-bottom: 8rpx;
 }
 
 .otp-row {
   display: flex;
   gap: 12rpx;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .otp-input {
@@ -194,17 +129,20 @@ page {
 
 .otp-btn {
   flex-shrink: 0;
+  margin-top: 8rpx;
 }
 
-/* ===== 按钮 ===== */
-.btn-primary {
-  margin-top: 24rpx;
-  background: #1f6f5c !important;
-  color: #fff !important;
-  border-radius: 12rpx !important;
+.btn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 8rpx;
 }
 
-.btn-plain {
-  margin-top: 20rpx;
-  border-radius: 12rpx !important;
+.link {
+  color: #1f6f5c;
+  font-size: 26rpx;
+  display: block;
+  text-align: center;
+  padding: 16rpx 0;
 }

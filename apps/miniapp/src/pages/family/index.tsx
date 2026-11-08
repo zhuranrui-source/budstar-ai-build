@@ -14,7 +14,6 @@ import {
   listStudentClasses,
   getStudentCurriculum,
   transitionSubmission,
-  saveSubmissionDraft,
   listPublishedSubjectCourses,
   listPlanetFeed,
   getGrowthView,
@@ -57,13 +56,16 @@ export default function FamilyPage() {
 
   useEffect(() => {
     if (!token) {
-      Taro.navigateTo({ url: '/pages/login/index' });
+      Taro.reLaunch({ url: '/pages/login/index' });
       return;
     }
     void reload();
     listPlanetFeed(token)
       .then(setPlanet)
       .catch(() => setPlanet([]));
+    listPublishedSubjectCourses(token)
+      .then(setSubjects)
+      .catch(() => setSubjects([]));
   }, []);
 
   async function reload() {
@@ -213,6 +215,22 @@ export default function FamilyPage() {
                     ? '待提交'
                     : '无作业'}
               </Text>
+              {lesson.assignment && !lesson.submission && (
+                <Button
+                  size="mini"
+                  type="primary"
+                  disabled={loading}
+                  onClick={() =>
+                    setDraftLesson({
+                      mainLessonId: lesson.mainLessonId,
+                      classId: curriculum.classId,
+                      track: lesson.track,
+                    })
+                  }
+                >
+                  写作品
+                </Button>
+              )}
               {lesson.submission &&
                 ['DRAFT', 'NEEDS_REVISION', 'SUBMITTED'].includes(
                   lesson.submission.status,
@@ -270,6 +288,22 @@ export default function FamilyPage() {
           </View>
         </View>
       )}
+
+      <View className="section">
+        <Text className="h2">学科互动实验室</Text>
+        {subjects.length === 0 ? (
+          <Text className="muted">暂无已发布内容。</Text>
+        ) : (
+          subjects.map((c) => (
+            <View key={c.id} className="card">
+              <Text className="card-title">
+                {SUBJECT[c.subject] ?? c.subject} · {c.title}
+              </Text>
+              <Text className="card-sub">{c.chapterCount} 章</Text>
+            </View>
+          ))
+        )}
+      </View>
 
       <View className="section">
         <Text className="h2">星芽星球</Text>

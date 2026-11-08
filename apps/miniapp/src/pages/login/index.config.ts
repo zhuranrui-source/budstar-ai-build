@@ -1,4 +1,1 @@
-export default definePageConfig({
-  navigationBarTitleText: '登录',
-  navigationStyle: 'custom',
-});
+export default definePageConfig({ navigationBarTitleText: '登录' });

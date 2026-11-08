@@ -19,5 +19,11 @@
   },
   "devDependencies": {
     "prettier": "3.9.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "lru-cache": "7.18.3",
+      "path-scurry>lru-cache": "10.4.3"
+    }
   }
 }
