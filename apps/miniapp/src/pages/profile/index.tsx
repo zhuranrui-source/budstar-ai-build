@@ -16,13 +16,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <View className='page'>
-      <View className='section'>
-        <Text className='h1'>{name}</Text>
-        <Text className='sub'>BudStar 星芽 · 家长用户</Text>
+    <View className="page">
+      <View className="section">
+        <Text className="h1">{name}</Text>
+        <Text className="sub">BudStar 星芽 · 家长用户</Text>
       </View>
-      <View className='section'>
-        <Button type='default' onClick={handleLogout}>退出登录</Button>
+      <View className="section">
+        <Button type="default" onClick={handleLogout}>
+          退出登录
+        </Button>
       </View>
     </View>
   );
