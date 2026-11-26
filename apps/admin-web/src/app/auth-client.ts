@@ -57,14 +57,14 @@ export class AdminApiClient {
     return session;
   }
 
-  async requestOtp(phone: string): Promise<{ sent: true }> {
-    return this.publicRequest('/auth/admin/request-otp', { phone });
-  }
-
-  async verifyOtp(phone: string, code: string): Promise<AuthenticatedSession> {
+  /** 统一入口：后端按账号识别员工或平台管理员。 */
+  async adminLogin(
+    loginIdentifier: string,
+    password: string,
+  ): Promise<AuthenticatedSession> {
     const session = await this.publicRequest<AuthenticatedSession>(
-      '/auth/admin/verify-otp',
-      { phone, code },
+      '/auth/admin/login',
+      { loginIdentifier, password },
     );
     this.writeSession(session);
     return session;

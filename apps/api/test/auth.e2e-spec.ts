@@ -27,7 +27,6 @@ describe('authentication and authorization API (e2e)', () => {
   let app: INestApplication<App>;
   const tokenSecret = 'integration-test-token-secret';
   const staffPhone = '13600136000';
-  const platformPhone = '13500135000';
   const phoneHash = (phone: string) =>
     createHmac('sha256', tokenSecret).update(phone).digest('hex');
   const scryptHash = (password: string) => {
@@ -60,7 +59,6 @@ describe('authentication and authorization API (e2e)', () => {
         kind: 'platform-admin',
         loginIdentifier: 'platform@local',
         passwordHash: scryptHash('Platform123!'),
-        phoneHash: phoneHash(platformPhone),
         displayName: '本地平台管理员',
         status: 'ACTIVE',
       },
@@ -284,58 +282,6 @@ describe('authentication and authorization API (e2e)', () => {
       .post('/api/auth/parent/verify-otp')
       .send({ phone: '13900139000', code: '111111' })
       .expect(429);
-
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      await request(app.getHttpServer())
-        .post('/api/auth/admin/verify-otp')
-        .send({ phone: staffPhone, code: '111111' })
-        .expect(401);
-    }
-    await request(app.getHttpServer())
-      .post('/api/auth/admin/verify-otp')
-      .send({ phone: staffPhone, code: '111111' })
-      .expect(429);
-  });
-
-  it('logs staff and platform admins in by registered phone OTP only', async () => {
-    await request(app.getHttpServer())
-      .post('/api/auth/admin/request-otp')
-      .send({ phone: staffPhone })
-      .expect(201);
-    const staff = await request(app.getHttpServer())
-      .post('/api/auth/admin/verify-otp')
-      .send({ phone: staffPhone, code: '000000' })
-      .expect(201);
-    expect(requireSession(staff.body as unknown).actor.kind).toBe('staff');
-    expect(cookieFrom(staff)).toContain('budstar_refresh=');
-
-    await request(app.getHttpServer())
-      .post('/api/auth/admin/request-otp')
-      .send({ phone: platformPhone })
-      .expect(201);
-    const platform = await request(app.getHttpServer())
-      .post('/api/auth/admin/verify-otp')
-      .send({ phone: platformPhone, code: '000000' })
-      .expect(201);
-    expect(requireSession(platform.body as unknown).actor.kind).toBe(
-      'platform-admin',
-    );
-
-    const unknown = await request(app.getHttpServer())
-      .post('/api/auth/admin/request-otp')
-      .send({ phone: '13800138000' })
-      .expect(403);
-    expect(unknown.body).toMatchObject({ code: 'ADMIN_PHONE_NOT_REGISTERED' });
-
-    // 家长验证码不能用于后台登录
-    await request(app.getHttpServer())
-      .post('/api/auth/parent/request-otp')
-      .send({ phone: staffPhone })
-      .expect(201);
-    await request(app.getHttpServer())
-      .post('/api/auth/admin/verify-otp')
-      .send({ phone: staffPhone, code: '000000' })
-      .expect(401);
   });
 
   it('lets only platform admins assign customer accounts used for web login', async () => {
@@ -392,7 +338,34 @@ describe('authentication and authorization API (e2e)', () => {
     );
   });
 
-  it('verifies scrypt password hashes and removes second-factor endpoints', async () => {
+  it('logs staff and platform admins in through one admin entry', async () => {
+    const staff = await request(app.getHttpServer())
+      .post('/api/auth/admin/login')
+      .send({ loginIdentifier: 'staff@local', password: 'Password123!' })
+      .expect(201);
+    expect(requireSession(staff.body as unknown).actor.kind).toBe('staff');
+    const platform = await request(app.getHttpServer())
+      .post('/api/auth/admin/login')
+      .send({ loginIdentifier: 'platform@local', password: 'Platform123!' })
+      .expect(201);
+    expect(requireSession(platform.body as unknown).actor.kind).toBe(
+      'platform-admin',
+    );
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/login')
+      .send({ loginIdentifier: 'partner@local', password: 'Partner123!' })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/login')
+      .send({ loginIdentifier: 'staff@local', password: 'wrong-password' })
+      .expect(401);
+  });
+
+  it('verifies scrypt password hashes and removes second-factor and admin OTP endpoints', async () => {
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/request-otp')
+      .send({ phone: staffPhone })
+      .expect(404);
     await request(app.getHttpServer())
       .post('/api/auth/platform/login')
       .send({ loginIdentifier: 'platform@local', password: 'wrong-password' })

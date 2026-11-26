@@ -156,56 +156,6 @@ export class AuthenticationService {
     return { sent: true };
   }
 
-  /** 机构后台：仅已登记手机号的员工/平台管理员可收验证码。 */
-  async requestAdminOtp(phone: string): Promise<{ sent: true }> {
-    await this.assertAttemptAllowed(
-      `admin-otp-request:${this.digest(phone)}`,
-      5,
-      5 * 60_000,
-    );
-    this.findAdminByPhone(phone);
-    await this.sendOtp(phone, this.otpDestination('admin', phone));
-    return { sent: true };
-  }
-
-  async verifyAdminOtp(
-    phone: string,
-    code: string,
-  ): Promise<IssuedAuthenticatedSession> {
-    await this.assertAttemptAllowed(
-      `admin-otp-verify:${this.digest(phone)}`,
-      5,
-      5 * 60_000,
-    );
-    if (
-      !(await this.adapters.verificationCodeStore.consume(
-        this.otpDestination('admin', phone),
-        code,
-        new Date(),
-      ))
-    ) {
-      throw this.unauthorized();
-    }
-    return this.issueSession(this.findAdminByPhone(phone));
-  }
-
-  private findAdminByPhone(phone: string): Account {
-    const phoneHash = this.digest(phone);
-    const account = [...this.accounts.values()].find(
-      (candidate) =>
-        candidate.phoneHash === phoneHash &&
-        (candidate.kind === 'staff' || candidate.kind === 'platform-admin'),
-    );
-    if (!account) {
-      throw new ApiException(
-        403,
-        'ADMIN_PHONE_NOT_REGISTERED',
-        '该手机号未开通机构后台账号，请联系管理员',
-      );
-    }
-    return this.requireActive(account.id);
-  }
-
   private async sendOtp(phone: string, destination: string): Promise<void> {
     const code =
       process.env.NODE_ENV === 'production'
@@ -221,7 +171,7 @@ export class AuthenticationService {
   }
 
   /** 验证码表只存手机号摘要，不落明文手机号。 */
-  private otpDestination(scope: 'parent' | 'admin', phone: string): string {
+  private otpDestination(scope: 'parent', phone: string): string {
     return `${scope}:${this.digest(phone)}`;
   }
 
@@ -450,6 +400,28 @@ export class AuthenticationService {
     }
     account.activeIdentity = 'parent';
     return this.reissueAccessToken(account, payload.sid);
+  }
+
+  /** 机构后台统一入口：按账号自动识别员工或平台管理员，无需选择入口。 */
+  async loginAdminWithPassword(
+    loginIdentifier: string,
+    password: string,
+  ): Promise<IssuedAuthenticatedSession> {
+    const identifier = loginIdentifier.trim();
+    await this.assertAttemptAllowed(
+      `password:admin:${identifier}`,
+      5,
+      5 * 60_000,
+    );
+    const account = [...this.accounts.values()].find(
+      (candidate) =>
+        candidate.loginIdentifier === identifier &&
+        (candidate.kind === 'staff' || candidate.kind === 'platform-admin'),
+    );
+    if (!account || !this.passwordMatches(account, password)) {
+      throw this.unauthorized();
+    }
+    return this.issueSession(this.requireActive(account.id));
   }
 
   /** 机构后台账号密码登录（已取消固定二次验证码）。 */

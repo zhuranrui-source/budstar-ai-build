@@ -15,6 +15,41 @@ export default function Home() {
   return <AdminWorkspace />;
 }
 
+function EyeOpenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path
+        d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function EyeClosedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path
+        d="M3 10c2.2 3 5.3 5 9 5s6.8-2 9-5M7 14l-1.6 2.4M12 15v3M17 14l1.6 2.4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function isPlatformAdminSession(session: { actor: { kind: string } }): boolean {
   return session.actor.kind === 'platform-admin';
 }
@@ -28,14 +63,9 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     [],
   );
   const [session, setSession] = useState<AuthenticatedSession | null>(null);
-  const [loginMode, setLoginMode] = useState<'phone' | 'password'>('phone');
-  const [entry, setEntry] = useState<'staff' | 'platform'>('staff');
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [codeCooldown, setCodeCooldown] = useState(0);
-  const [notice, setNotice] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedCampus, setSelectedCampus] = useState('');
   const [overview, setOverview] = useState<{
     modules: string[];
@@ -104,15 +134,6 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     }
   }
 
-  useEffect(() => {
-    if (codeCooldown <= 0) return;
-    const timer = window.setTimeout(
-      () => setCodeCooldown((value) => value - 1),
-      1000,
-    );
-    return () => window.clearTimeout(timer);
-  }, [codeCooldown]);
-
   async function enterWorkspace(nextSession: AuthenticatedSession) {
     setSession(nextSession);
     if (nextSession.actor.kind === 'platform-admin') {
@@ -155,40 +176,9 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     }
     await runLogin(async () => {
       await enterWorkspace(
-        await client.login(entry, loginIdentifier.trim(), password),
+        await client.adminLogin(loginIdentifier.trim(), password),
       );
-    }, '账号或密码不正确（请确认员工/平台管理员入口是否选对）');
-  }
-
-  async function sendCode() {
-    setNotice('');
-    if (!/^1\d{10}$/.test(phone)) {
-      setError('请输入有效的 11 位手机号');
-      return;
-    }
-    await runLogin(async () => {
-      await client.requestOtp(phone);
-      setCodeCooldown(60);
-      setNotice('验证码已发送，5 分钟内有效');
-    }, '验证码发送失败，请稍后重试');
-  }
-
-  async function submitOtp(event: FormEvent) {
-    event.preventDefault();
-    setNotice('');
-    if (!/^1\d{10}$/.test(phone) || !/^\d{6}$/.test(otp)) {
-      setError('请填写正确的手机号和 6 位验证码');
-      return;
-    }
-    await runLogin(async () => {
-      await enterWorkspace(await client.verifyOtp(phone, otp));
-    }, '验证码不正确或已过期，请重新获取');
-  }
-
-  function switchLoginMode(nextMode: 'phone' | 'password') {
-    setLoginMode(nextMode);
-    setError('');
-    setNotice('');
+    }, '账号或密码不正确');
   }
 
   async function chooseCampus(campusId: string) {
@@ -256,13 +246,6 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     window.location.replace('/login');
   }
 
-  function switchEntry(nextEntry: 'staff' | 'platform') {
-    setEntry(nextEntry);
-    setError('');
-    setLoginIdentifier('');
-    setPassword('');
-  }
-
   async function recoverFromForbidden() {
     setForbidden(false);
     setOverview(null);
@@ -308,124 +291,53 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   }
 
   if (!session) {
-    const isPhone = loginMode === 'phone';
     return (
       <main className="ops-login">
         <section className="ops-login-card">
           <span className="ops-kicker">BUDSTAR AI · 机构工作台</span>
           <h1>登录机构后台</h1>
-          <p>
-            {isPhone
-              ? '使用已登记的手机号接收验证码登录。'
-              : '使用员工或平台管理员账号密码登录。'}
-          </p>
-          {!isPhone && (
-            <div className="ops-entry-tabs">
-              <button
-                className={entry === 'staff' ? 'is-active' : undefined}
-                onClick={() => switchEntry('staff')}
-                type="button"
-              >
-                员工入口
-              </button>
-              <button
-                className={entry === 'platform' ? 'is-active' : undefined}
-                onClick={() => switchEntry('platform')}
-                type="button"
-              >
-                平台管理员
-              </button>
-            </div>
-          )}
-          <form
-            onSubmit={isPhone ? submitOtp : submitLogin}
-            className="ops-login-form"
-          >
-            {isPhone ? (
-              <>
-                <label>
-                  手机号
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    maxLength={11}
-                    placeholder="请输入 11 位手机号"
-                    value={phone}
-                    onChange={(event) =>
-                      setPhone(
-                        event.target.value.replace(/\D/g, '').slice(0, 11),
-                      )
-                    }
-                    autoFocus
-                  />
-                </label>
-                <label>
-                  验证码
-                  <span className="ops-otp-line">
-                    <input
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      placeholder="6 位验证码"
-                      value={otp}
-                      onChange={(event) =>
-                        setOtp(
-                          event.target.value.replace(/\D/g, '').slice(0, 6),
-                        )
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="ops-otp-button"
-                      disabled={loading || codeCooldown > 0}
-                      onClick={() => void sendCode()}
-                    >
-                      {codeCooldown > 0 ? `${codeCooldown}s` : '获取验证码'}
-                    </button>
-                  </span>
-                </label>
-              </>
-            ) : (
-              <>
-                <label>
-                  账号
-                  <input
-                    value={loginIdentifier}
-                    onChange={(event) => setLoginIdentifier(event.target.value)}
-                    autoComplete="username"
-                  />
-                </label>
-                <label>
-                  密码
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    autoComplete="current-password"
-                  />
-                </label>
-              </>
-            )}
-            {notice && (
-              <p className="ops-login-hint" role="status">
-                {notice}
-              </p>
-            )}
+          <p>使用员工或平台管理员账号登录，系统会自动识别身份。</p>
+          <form onSubmit={submitLogin} className="ops-login-form">
+            <label>
+              账号
+              <input
+                value={loginIdentifier}
+                onChange={(event) => setLoginIdentifier(event.target.value)}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                autoFocus
+              />
+            </label>
+            <label>
+              密码
+              <span className="ops-password-line">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                />
+                <button
+                  type="button"
+                  className="ops-password-toggle"
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                </button>
+              </span>
+            </label>
             {error && (
               <div className="ops-login-error" role="alert">
                 {error}
               </div>
             )}
             <button className="ops-primary" disabled={loading}>
-              {loading ? '正在验证…' : '登录'}
-            </button>
-            <button
-              type="button"
-              className="ops-text-button"
-              onClick={() => switchLoginMode(isPhone ? 'password' : 'phone')}
-            >
-              {isPhone ? '使用账号密码登录' : '使用手机号验证码登录'}
+              {loading ? '正在登录…' : '登录'}
             </button>
           </form>
         </section>

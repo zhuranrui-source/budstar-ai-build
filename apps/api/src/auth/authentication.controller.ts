@@ -58,26 +58,6 @@ export class AuthenticationController {
     return this.attachRefreshCookie(response, session);
   }
 
-  @Post('admin/request-otp')
-  @Public()
-  requestAdminOtp(@Body() body: unknown) {
-    const input = this.parse(parentOtpRequestSchema, body);
-    return this.authentication.requestAdminOtp(input.phone);
-  }
-
-  @Post('admin/verify-otp')
-  @Public()
-  async verifyAdminOtp(
-    @Body() body: unknown,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const input = this.parse(parentOtpVerifySchema, body);
-    const session = await this.withLoginAudit(() =>
-      this.authentication.verifyAdminOtp(input.phone, input.code),
-    );
-    return this.attachRefreshCookie(response, session);
-  }
-
   @Post('student/login')
   @Public()
   async loginStudent(@Body() body: unknown) {
@@ -101,6 +81,22 @@ export class AuthenticationController {
     const { refreshTokenForCookie, ...publicSession } = session;
     void refreshTokenForCookie;
     return publicSession;
+  }
+
+  @Post('admin/login')
+  @Public()
+  async loginAdmin(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const input = this.parse(passwordLoginSchema, body);
+    const session = await this.withLoginAudit(() =>
+      this.authentication.loginAdminWithPassword(
+        input.loginIdentifier,
+        input.password,
+      ),
+    );
+    return this.attachRefreshCookie(response, session);
   }
 
   @Post('staff/login')
