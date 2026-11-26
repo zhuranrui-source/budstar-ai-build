@@ -1,10 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import type {
-  AuthenticatedSession,
-  AuthenticationChallenge,
-} from '@budstar/contracts';
+import type { AuthenticatedSession } from '@budstar/contracts';
 import {
   AdminApiClient,
   ApiRequestError,
@@ -17,27 +14,6 @@ import { adminSessionRedirect } from './session-routing';
 export default function Home() {
   return <AdminWorkspace />;
 }
-
-const LOCAL_ADMIN_ACCOUNTS = {
-  staff: {
-    loginIdentifier: 'staff@local',
-    password: 'Password123!',
-    secondFactorCode: '000000',
-    hint: '员工：staff@local / Password123!，二次验证码 000000',
-  },
-  platform: {
-    loginIdentifier: 'platform@local',
-    password: 'Platform123!',
-    secondFactorCode: '000000',
-    hint: '平台：platform@local / Platform123!，二次验证码 000000',
-  },
-  partner: {
-    loginIdentifier: 'partner@local',
-    password: 'Partner123!',
-    secondFactorCode: '000000',
-    hint: '合作方：partner@local / Partner123!，二次验证码 000000',
-  },
-} as const;
 
 function isPlatformAdminSession(session: { actor: { kind: string } }): boolean {
   return session.actor.kind === 'platform-admin';
@@ -52,19 +28,14 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     [],
   );
   const [session, setSession] = useState<AuthenticatedSession | null>(null);
-  const [challenge, setChallenge] = useState<AuthenticationChallenge | null>(
-    null,
-  );
-  const [entry, setEntry] = useState<'staff' | 'partner' | 'platform'>('staff');
-  const [loginIdentifier, setLoginIdentifier] = useState<string>(
-    LOCAL_ADMIN_ACCOUNTS.staff.loginIdentifier,
-  );
-  const [password, setPassword] = useState<string>(
-    LOCAL_ADMIN_ACCOUNTS.staff.password,
-  );
-  const [secondFactorCode, setSecondFactorCode] = useState<string>(
-    LOCAL_ADMIN_ACCOUNTS.staff.secondFactorCode,
-  );
+  const [loginMode, setLoginMode] = useState<'phone' | 'password'>('phone');
+  const [entry, setEntry] = useState<'staff' | 'platform'>('staff');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [codeCooldown, setCodeCooldown] = useState(0);
+  const [notice, setNotice] = useState('');
   const [selectedCampus, setSelectedCampus] = useState('');
   const [overview, setOverview] = useState<{
     modules: string[];
@@ -116,7 +87,6 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     } catch (cause) {
       if (cause instanceof SessionExpiredError) {
         setSession(null);
-        setChallenge(null);
         window.location.replace('/login');
         return;
       }
@@ -134,38 +104,65 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     }
   }
 
+  useEffect(() => {
+    if (codeCooldown <= 0) return;
+    const timer = window.setTimeout(
+      () => setCodeCooldown((value) => value - 1),
+      1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [codeCooldown]);
+
+  async function enterWorkspace(nextSession: AuthenticatedSession) {
+    setSession(nextSession);
+    if (nextSession.actor.kind === 'platform-admin') {
+      setOverview(await client.getPlatformOverview());
+    }
+    if (loginOnly && nextSession.actor.kind === 'platform-admin') {
+      window.location.replace('/platform');
+      return;
+    }
+    if (loginOnly) window.location.replace('/');
+  }
+
   async function submitLogin(event: FormEvent) {
     event.preventDefault();
     await run(async () => {
-      setChallenge(await client.login(entry, loginIdentifier, password));
+      await enterWorkspace(
+        await client.login(entry, loginIdentifier.trim(), password),
+      );
     });
   }
 
-  async function submitSecondFactor(event: FormEvent) {
-    event.preventDefault();
-    if (!challenge) return;
+  async function sendCode() {
+    setNotice('');
+    if (!/^1\d{10}$/.test(phone)) {
+      setError('请输入有效的 11 位手机号');
+      return;
+    }
     await run(async () => {
-      const nextSession = await client.verifySecondFactor(
-        entry,
-        challenge.challengeToken,
-        secondFactorCode,
-      );
-      setSession(nextSession);
-      setChallenge(null);
-      if (nextSession.actor.kind === 'platform-admin') {
-        setOverview(await client.getPlatformOverview());
-      }
-      // ADR-0010：按身份空间落位——合作方 → /partner，平台 → /platform
-      if (nextSession.actor.kind === 'partner') {
-        window.location.replace('/partner');
-        return;
-      }
-      if (loginOnly && nextSession.actor.kind === 'platform-admin') {
-        window.location.replace('/platform');
-        return;
-      }
-      if (loginOnly) window.location.replace('/');
+      await client.requestOtp(phone);
+      setCodeCooldown(60);
+      setNotice('验证码已发送，5 分钟内有效');
     });
+  }
+
+  async function submitOtp(event: FormEvent) {
+    event.preventDefault();
+    setNotice('');
+    if (!/^1\d{10}$/.test(phone) || !/^\d{6}$/.test(otp)) {
+      setError('请填写正确的手机号和 6 位验证码');
+      return;
+    }
+    await run(async () => {
+      await enterWorkspace(await client.verifyOtp(phone, otp));
+    });
+  }
+
+  function switchLoginMode(nextMode: 'phone' | 'password') {
+    setLoginMode(nextMode);
+    setError('');
+    setNotice('');
   }
 
   async function chooseCampus(campusId: string) {
@@ -233,14 +230,11 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     window.location.replace('/login');
   }
 
-  function switchEntry(nextEntry: 'staff' | 'partner' | 'platform') {
-    const account = LOCAL_ADMIN_ACCOUNTS[nextEntry];
+  function switchEntry(nextEntry: 'staff' | 'platform') {
     setEntry(nextEntry);
-    setChallenge(null);
     setError('');
-    setLoginIdentifier(account.loginIdentifier);
-    setPassword(account.password);
-    setSecondFactorCode(account.secondFactorCode);
+    setLoginIdentifier('');
+    setPassword('');
   }
 
   async function recoverFromForbidden() {
@@ -288,20 +282,18 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   }
 
   if (!session) {
-    const isSecondFactor = challenge !== null;
+    const isPhone = loginMode === 'phone';
     return (
       <main className="ops-login">
         <section className="ops-login-card">
-          <span className="ops-kicker">
-            {isSecondFactor ? '安全验证' : 'BUDSTAR AI · 机构工作台'}
-          </span>
-          <h1>{isSecondFactor ? '输入二次验证码' : '登录机构后台'}</h1>
+          <span className="ops-kicker">BUDSTAR AI · 机构工作台</span>
+          <h1>登录机构后台</h1>
           <p>
-            {isSecondFactor
-              ? '完成本地二次验证后进入校区运营空间。'
-              : '安全连接课程交付、家庭沟通与成长报告。'}
+            {isPhone
+              ? '使用已登记的手机号接收验证码登录。'
+              : '使用员工或平台管理员账号密码登录。'}
           </p>
-          {!isSecondFactor && (
+          {!isPhone && (
             <div className="ops-entry-tabs">
               <button
                 className={entry === 'staff' ? 'is-active' : undefined}
@@ -309,13 +301,6 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
                 type="button"
               >
                 员工入口
-              </button>
-              <button
-                className={entry === 'partner' ? 'is-active' : undefined}
-                type="button"
-                onClick={() => switchEntry('partner')}
-              >
-                合作方
               </button>
               <button
                 className={entry === 'platform' ? 'is-active' : undefined}
@@ -327,20 +312,54 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
             </div>
           )}
           <form
-            onSubmit={isSecondFactor ? submitSecondFactor : submitLogin}
+            onSubmit={isPhone ? submitOtp : submitLogin}
             className="ops-login-form"
           >
-            {isSecondFactor ? (
-              <label>
-                二次验证码
-                <input
-                  value={secondFactorCode}
-                  inputMode="numeric"
-                  maxLength={6}
-                  onChange={(event) => setSecondFactorCode(event.target.value)}
-                  autoFocus
-                />
-              </label>
+            {isPhone ? (
+              <>
+                <label>
+                  手机号
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    maxLength={11}
+                    placeholder="请输入 11 位手机号"
+                    value={phone}
+                    onChange={(event) =>
+                      setPhone(
+                        event.target.value.replace(/\D/g, '').slice(0, 11),
+                      )
+                    }
+                    autoFocus
+                  />
+                </label>
+                <label>
+                  验证码
+                  <span className="ops-otp-line">
+                    <input
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="6 位验证码"
+                      value={otp}
+                      onChange={(event) =>
+                        setOtp(
+                          event.target.value.replace(/\D/g, '').slice(0, 6),
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="ops-otp-button"
+                      disabled={loading || codeCooldown > 0}
+                      onClick={() => void sendCode()}
+                    >
+                      {codeCooldown > 0 ? `${codeCooldown}s` : '获取验证码'}
+                    </button>
+                  </span>
+                </label>
+              </>
             ) : (
               <>
                 <label>
@@ -362,34 +381,26 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
                 </label>
               </>
             )}
-            <p className="ops-login-hint" role="note">
-              {isSecondFactor
-                ? `本地二次验证码：${LOCAL_ADMIN_ACCOUNTS[entry].secondFactorCode}`
-                : LOCAL_ADMIN_ACCOUNTS[entry].hint}
-            </p>
+            {notice && (
+              <p className="ops-login-hint" role="status">
+                {notice}
+              </p>
+            )}
             {error && (
               <div className="ops-login-error" role="alert">
                 {error}
               </div>
             )}
             <button className="ops-primary" disabled={loading}>
-              {loading ? '正在验证…' : isSecondFactor ? '完成验证' : '继续'}
+              {loading ? '正在验证…' : '登录'}
             </button>
-            {isSecondFactor && (
-              <button
-                type="button"
-                className="ops-text-button"
-                onClick={() => {
-                  setChallenge(null);
-                  setSecondFactorCode(
-                    LOCAL_ADMIN_ACCOUNTS[entry].secondFactorCode,
-                  );
-                  setError('');
-                }}
-              >
-                返回账号登录
-              </button>
-            )}
+            <button
+              type="button"
+              className="ops-text-button"
+              onClick={() => switchLoginMode(isPhone ? 'password' : 'phone')}
+            >
+              {isPhone ? '使用账号密码登录' : '使用手机号验证码登录'}
+            </button>
           </form>
         </section>
       </main>

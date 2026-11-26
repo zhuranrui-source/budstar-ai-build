@@ -36,15 +36,6 @@ describe('AdminApiClient', () => {
     const fetcher = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            challengeToken: 'challenge',
-            secondFactorRequired: true,
-          }),
-          { status: 201 },
-        ),
-      )
-      .mockResolvedValueOnce(
         new Response(JSON.stringify(session), { status: 201 }),
       );
     const client = new AdminApiClient(
@@ -53,16 +44,7 @@ describe('AdminApiClient', () => {
       storage(),
     );
 
-    const challenge = await client.login(
-      'staff',
-      'staff@local',
-      'Password123!',
-    );
-    await client.verifySecondFactor(
-      'staff',
-      challenge.challengeToken,
-      '000000',
-    );
+    await client.login('staff', 'staff@local', 'Password123!');
 
     expect(fetcher).toHaveBeenNthCalledWith(
       1,

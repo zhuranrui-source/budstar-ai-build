@@ -12,6 +12,7 @@ import {
 } from 'react';
 import {
   ConsumerAuthError,
+  loginParentWithPassword,
   logoutConsumer,
   requestParentOtp,
   switchConsumerIdentity,
@@ -35,6 +36,7 @@ import {
 
 type AuthTab = 'phone' | 'student';
 type AuthStage = 'credentials' | 'role';
+type LoginMethod = 'otp' | 'password';
 
 export const OPEN_CONSUMER_AUTH_EVENT = 'budstar:open-consumer-auth';
 
@@ -100,8 +102,11 @@ export function ConsumerAuthChrome({
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [stage, setStage] = useState<AuthStage>('credentials');
-  const [phone, setPhone] = useState('13800138000');
-  const [otp, setOtp] = useState('000000');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('otp');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [codeCooldown, setCodeCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -274,7 +279,7 @@ export function ConsumerAuthChrome({
       await requestParentOtp(normalized);
       setPhone(normalized);
       setCodeCooldown(60);
-      setNotice('验证码已发送（本地固定码见测试账号说明）');
+      setNotice('验证码已发送，请注意查收短信');
     } catch (cause) {
       setError(
         cause instanceof ConsumerAuthError ? cause.message : '验证码发送失败',
@@ -304,6 +309,38 @@ export function ConsumerAuthChrome({
     } finally {
       setLoading(false);
     }
+  };
+
+  const submitPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setNotice('');
+    if (!username.trim() || !password) {
+      setError('请填写账号和密码');
+      return;
+    }
+    setLoading(true);
+    try {
+      await loginParentWithPassword(username.trim(), password);
+      setPassword('');
+      await completeLogin(null);
+    } catch (cause) {
+      setError(
+        cause instanceof ConsumerAuthError && cause.status === 401
+          ? '账号或密码不正确'
+          : cause instanceof ConsumerAuthError
+            ? cause.message
+            : '登录失败，请重试',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchLoginMethod = (next: LoginMethod) => {
+    setLoginMethod(next);
+    setError('');
+    setNotice('');
   };
 
   const enterAs = async (nextRole: ConsumerRole) => {
@@ -448,65 +485,112 @@ export function ConsumerAuthChrome({
                 </p>
               ) : null}
               <p>
-                默认用手机号登录，家长与学生共用家庭视图（ADR-0007）；学生以档案方式在视图内切换。
+                {loginMethod === 'otp'
+                  ? '输入手机号获取验证码，首次登录将自动创建账号。'
+                  : '账号密码由星芽统一分配，如需开通请联系课程顾问。'}
               </p>
-              {
-                <form
-                  className="consumer-auth-panel is-active"
-                  onSubmit={(event) => void submitPhone(event)}
-                >
-                  <label>
-                    手机号
-                    <input
-                      type="tel"
-                      value={phone}
-                      autoComplete="tel"
-                      onChange={(event) => setPhone(event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    验证码
-                    <span className="consumer-code-input">
+              <form
+                className="consumer-auth-panel is-active"
+                onSubmit={(event) =>
+                  void (loginMethod === 'otp'
+                    ? submitPhone(event)
+                    : submitPassword(event))
+                }
+              >
+                {loginMethod === 'otp' ? (
+                  <>
+                    <label>
+                      手机号
                       <input
-                        value={otp}
+                        type="tel"
+                        value={phone}
+                        autoComplete="tel"
                         inputMode="numeric"
-                        maxLength={6}
-                        onChange={(event) =>
-                          setOtp(
-                            event.target.value.replace(/\D/g, '').slice(0, 6),
-                          )
-                        }
+                        placeholder="请输入 11 位手机号"
+                        onChange={(event) => setPhone(event.target.value)}
                       />
-                      <button
-                        type="button"
-                        disabled={loading || codeCooldown > 0}
-                        onClick={() => void sendCode()}
-                      >
-                        {codeCooldown > 0 ? `${codeCooldown}s` : '获取验证码'}
-                      </button>
-                    </span>
-                  </label>
-                  {error && (
-                    <p
-                      role="alert"
-                      style={{
-                        margin: 0,
-                        color: '#9b402a',
-                        fontSize: 12,
-                      }}
-                    >
-                      {error}
-                    </p>
-                  )}
-                  <button
-                    className="consumer-auth-primary"
-                    type="submit"
-                    disabled={loading}
+                    </label>
+                    <label>
+                      验证码
+                      <span className="consumer-code-input">
+                        <input
+                          value={otp}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder="6 位验证码"
+                          onChange={(event) =>
+                            setOtp(
+                              event.target.value.replace(/\D/g, '').slice(0, 6),
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          disabled={loading || codeCooldown > 0}
+                          onClick={() => void sendCode()}
+                        >
+                          {codeCooldown > 0 ? `${codeCooldown}s` : '获取验证码'}
+                        </button>
+                      </span>
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <label>
+                      账号
+                      <input
+                        value={username}
+                        autoComplete="username"
+                        placeholder="请输入星芽分配的账号"
+                        onChange={(event) => setUsername(event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      密码
+                      <input
+                        type="password"
+                        value={password}
+                        autoComplete="current-password"
+                        placeholder="请输入登录密码"
+                        onChange={(event) => setPassword(event.target.value)}
+                      />
+                    </label>
+                  </>
+                )}
+                {error && (
+                  <p
+                    role="alert"
+                    style={{
+                      margin: 0,
+                      color: '#9b402a',
+                      fontSize: 12,
+                    }}
                   >
-                    {loading ? '验证中…' : '继续'}
-                  </button>
-                </form>
-              }
+                    {error}
+                  </p>
+                )}
+                <button
+                  className="consumer-auth-primary"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? '验证中…' : '登录'}
+                </button>
+                <button
+                  type="button"
+                  className="consumer-auth-switch"
+                  onClick={() =>
+                    switchLoginMethod(
+                      loginMethod === 'otp' ? 'password' : 'otp',
+                    )
+                  }
+                >
+                  {loginMethod === 'otp'
+                    ? '使用账号密码登录'
+                    : '使用手机号验证码登录'}
+                </button>
+              </form>
               <div className="consumer-auth-divider">
                 <span>或使用</span>
               </div>

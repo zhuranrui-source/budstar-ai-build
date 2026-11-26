@@ -739,6 +739,14 @@ button {
   color: #fff;
   font-weight: 800;
 }
+.consumer-auth-switch {
+  border: 0;
+  background: transparent;
+  color: #9b402a;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
 .consumer-auth-divider {
   display: flex;
   align-items: center;

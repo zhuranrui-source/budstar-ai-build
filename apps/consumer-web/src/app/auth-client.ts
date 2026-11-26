@@ -72,6 +72,20 @@ export async function verifyParentOtp(
   return session;
 }
 
+export async function loginParentWithPassword(
+  username: string,
+  password: string,
+  fetcher: FetchLike = fetch,
+): Promise<AuthenticatedSession> {
+  const session = await publicPost<AuthenticatedSession>(
+    '/auth/parent/password-login',
+    { username, password },
+    fetcher,
+  );
+  writeConsumerSession(session);
+  return session;
+}
+
 export async function loginStudent(
   loginIdentifier: string,
   password: string,

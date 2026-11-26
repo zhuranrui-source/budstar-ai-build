@@ -1,7 +1,4 @@
-import type {
-  AuthenticatedSession,
-  AuthenticationChallenge,
-} from '@budstar/contracts';
+import type { AuthenticatedSession } from '@budstar/contracts';
 
 const SESSION_KEY = 'budstar.admin.session';
 
@@ -50,24 +47,46 @@ export class AdminApiClient {
     kind: 'staff' | 'partner' | 'platform',
     loginIdentifier: string,
     password: string,
-  ): Promise<AuthenticationChallenge> {
-    return this.publicRequest(`/auth/${kind}/login`, {
-      loginIdentifier,
-      password,
-    });
-  }
-
-  async verifySecondFactor(
-    kind: 'staff' | 'partner' | 'platform',
-    challengeToken: string,
-    code: string,
   ): Promise<AuthenticatedSession> {
     const session = await this.publicRequest<AuthenticatedSession>(
-      `/auth/${kind}/verify-second-factor`,
-      { challengeToken, code },
+      `/auth/${kind}/login`,
+      { loginIdentifier, password },
     );
     this.writeSession(session);
     return session;
+  }
+
+  async requestOtp(phone: string): Promise<{ sent: true }> {
+    return this.publicRequest('/auth/admin/request-otp', { phone });
+  }
+
+  async verifyOtp(phone: string, code: string): Promise<AuthenticatedSession> {
+    const session = await this.publicRequest<AuthenticatedSession>(
+      '/auth/admin/verify-otp',
+      { phone, code },
+    );
+    this.writeSession(session);
+    return session;
+  }
+
+  async listConsumerAccounts() {
+    return this.authenticatedRequest<
+      Array<{ id: string; username: string; updatedAt: string }>
+    >('/platform/consumer-accounts');
+  }
+
+  async assignConsumerAccount(body: {
+    phone: string;
+    username: string;
+    password: string;
+  }) {
+    return this.authenticatedRequest<{
+      userAccountId: string;
+      username: string;
+    }>('/platform/consumer-accounts', undefined, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   async getCampusOverview(campusId: string) {

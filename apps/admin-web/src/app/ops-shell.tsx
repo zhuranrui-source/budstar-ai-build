@@ -13,7 +13,8 @@ export type OpsNavKey =
   | 'leads'
   | 'platform'
   | 'subject-courses'
-  | 'platform-leads';
+  | 'platform-leads'
+  | 'consumer-accounts';
 
 const STAFF_NAV: Array<{ key: OpsNavKey; href: string; label: string }> = [
   { key: 'desk', href: '/', label: '工作台' },
@@ -54,6 +55,11 @@ export function OpsShell({
           key: 'platform-leads' as const,
           href: '/platform/leads',
           label: '线索 CRM',
+        },
+        {
+          key: 'consumer-accounts' as const,
+          href: '/platform/consumer-accounts',
+          label: '客户账号',
         },
       ]
     : STAFF_NAV;
