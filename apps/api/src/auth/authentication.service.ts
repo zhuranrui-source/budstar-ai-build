@@ -167,7 +167,21 @@ export class AuthenticationService {
       code,
       expiresAt,
     );
-    await this.adapters.verificationCodeSender.send(phone, code);
+    try {
+      await this.adapters.verificationCodeSender.send(phone, code);
+    } catch (cause) {
+      if (cause instanceof ApiException) throw cause;
+      // 不记录手机号与验证码，只保留供应商错误信息便于排查。
+      console.error(
+        '[sms] verification code delivery failed:',
+        cause instanceof Error ? cause.message : cause,
+      );
+      throw new ApiException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        'SERVICE_UNAVAILABLE',
+        '短信服务暂时不可用，请稍后重试或使用账号密码登录',
+      );
+    }
   }
 
   /** 验证码表只存手机号摘要，不落明文手机号。 */

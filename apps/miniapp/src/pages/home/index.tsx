@@ -9,8 +9,7 @@ export default function HomePage() {
   const current = HERO_ITEMS[active];
 
   function goAppointment(): void {
-    Taro.setStorageSync('budstar.scrollToAppointment', '1');
-    void Taro.switchTab({ url: '/pages/family/index' });
+    void Taro.navigateTo({ url: '/pages/appointment/index' });
   }
 
   return (

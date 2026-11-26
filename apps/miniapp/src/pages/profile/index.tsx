@@ -122,9 +122,7 @@ export default function ProfilePage() {
         </View>
         <View className="profile-copy">
           <Text className="profile-name">{session.actor.displayName}</Text>
-          <Text className="profile-role">
-            家长账号 · 已绑定 {studentCount} 个孩子
-          </Text>
+          <Text className="profile-role">星芽家长账号</Text>
         </View>
         <Text className="profile-badge">家庭</Text>
       </View>
@@ -151,37 +149,6 @@ export default function ProfilePage() {
           </Button>
         </View>
       ) : null}
-
-      <View className="profile-group">
-        <Text className="profile-group-title">家庭成员</Text>
-        <View
-          className="profile-row"
-          onClick={() => Taro.switchTab({ url: '/pages/family/index' })}
-        >
-          <View>
-            <Text className="profile-row-title">学生成长档案</Text>
-            <Text className="profile-row-description">
-              已关联 {studentCount} 个学生
-            </Text>
-          </View>
-          <Text className="profile-row-action">管理 →</Text>
-        </View>
-        <View
-          className="profile-row"
-          onClick={() => {
-            Taro.setStorageSync('budstar.openFamilyBinding', true);
-            void Taro.switchTab({ url: '/pages/family/index' });
-          }}
-        >
-          <View>
-            <Text className="profile-row-title">绑定另一个孩子</Text>
-            <Text className="profile-row-description">
-              使用校区提供的家庭查看码
-            </Text>
-          </View>
-          <Text className="profile-row-action">添加 →</Text>
-        </View>
-      </View>
 
       <View className="profile-group">
         <Text className="profile-group-title">账号与安全</Text>

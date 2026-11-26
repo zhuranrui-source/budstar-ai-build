@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useEffect, type ReactNode } from 'react';
 import { ConsumerAuthChrome } from './consumer-auth';
 
-export type CommunityTab = 'planet' | 'favorites' | 'mine';
+export type CommunityTab = 'planet' | 'lab' | 'favorites' | 'mine';
 
 const TABS: Array<{ id: CommunityTab; href: string; label: string }> = [
   { id: 'planet', href: '/planet', label: '星球' },
+  { id: 'lab', href: '/lab', label: '互动实验室' },
   { id: 'favorites', href: '/planet?view=favorites', label: '我的收藏' },
   { id: 'mine', href: '/planet?view=mine', label: '我的分享' },
 ];
@@ -49,7 +50,7 @@ export function CommunityShell({
               href={tab.href}
               className={tab.id === active ? 'is-active' : undefined}
               onClick={(event) => {
-                if (!onNavigate) return;
+                if (!onNavigate || tab.id === 'lab') return;
                 event.preventDefault();
                 onNavigate(tab.id);
               }}

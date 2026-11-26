@@ -254,7 +254,9 @@ export default function PlanetFeedPage({
   return (
     <CommunityShell
       active={tabActive}
-      onNavigate={(tab) => switchView(tab === 'planet' ? 'feed' : tab)}
+      onNavigate={(tab) =>
+        tab !== 'lab' && switchView(tab === 'planet' ? 'feed' : tab)
+      }
     >
       <section className="planet2">
         <header className="planet2-head">

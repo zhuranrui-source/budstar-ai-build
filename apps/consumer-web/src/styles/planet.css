@@ -597,3 +597,214 @@
   font-size: 13px;
   transform: translateX(-50%);
 }
+
+/* ===== 互动实验室 ===== */
+.lab2 {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  color: #20201f;
+}
+
+.lab2-hero span {
+  color: #e8684a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.lab2-hero h1 {
+  margin: 6px 0 8px;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.lab2-hero p {
+  max-width: 640px;
+  margin: 0;
+  color: #77756f;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.lab2-subjects {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin: 26px 0 14px;
+}
+
+@media (max-width: 760px) {
+  .lab2-subjects {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.lab2-subjects button {
+  display: grid;
+  gap: 4px;
+  padding: 14px 12px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--lab-soft);
+  color: var(--lab-ink);
+  text-align: left;
+}
+
+.lab2-subjects button b {
+  font-size: 17px;
+}
+
+.lab2-subjects button small {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.lab2-subjects button.is-active {
+  border-color: var(--lab-ink);
+}
+
+.is-math {
+  --lab-soft: #fff0e8;
+  --lab-ink: #b4472c;
+}
+.is-physics {
+  --lab-soft: #e8f0ff;
+  --lab-ink: #2f56b0;
+}
+.is-chemistry {
+  --lab-soft: #eaf6ef;
+  --lab-ink: #2c7a4b;
+}
+.is-biology {
+  --lab-soft: #f1f7e4;
+  --lab-ink: #56781c;
+}
+.is-chinese {
+  --lab-soft: #fbeef3;
+  --lab-ink: #a23a63;
+}
+.is-english {
+  --lab-soft: #eef0fb;
+  --lab-ink: #4a4fa8;
+}
+
+.lab2-intro {
+  margin: 0 0 18px;
+  color: #77756f;
+  font-size: 14px;
+}
+
+.lab2-courses {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.lab2-course {
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 1px 0 #e7e5df,
+    0 6px 18px rgba(32, 32, 31, 0.04);
+}
+
+.lab2-course.is-open {
+  grid-column: 1 / -1;
+}
+
+.lab2-course-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'badge title more' 'badge meta more';
+  gap: 2px 12px;
+  align-items: center;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--lab-soft);
+  text-align: left;
+}
+
+.lab2-badge {
+  grid-area: badge;
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  height: 44px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--lab-ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lab2-course-head h2 {
+  grid-area: title;
+  margin: 0;
+  color: #20201f;
+  font-size: 16px;
+}
+
+.lab2-course-head small {
+  grid-area: meta;
+  color: #77756f;
+  font-size: 12px;
+}
+
+.lab2-course-head em {
+  grid-area: more;
+  color: var(--lab-ink);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.lab2-chapters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px 18px;
+  list-style: none;
+  counter-reset: chapter;
+}
+
+.lab2-chapters li a,
+.lab2-chapters li > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid #eeece6;
+  border-radius: 10px;
+  color: #20201f;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.lab2-chapters li a:hover {
+  border-color: var(--lab-ink);
+  background: var(--lab-soft);
+}
+
+.lab2-chapters li a i {
+  flex: none;
+  color: var(--lab-ink);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.lab2-chapters li.is-nav a {
+  border-style: dashed;
+  color: #77756f;
+}
+
+.lab2-muted {
+  color: #77756f;
+  font-size: 13px;
+}

@@ -224,11 +224,12 @@ export default function Home() {
           <header className="toon-nav">
             <a href="#top">星芽AI</a>
             <nav aria-label="网站导航">
-              <a href="#products">产品</a>
-              <a href="#path">课程</a>
               <a href="/planet" onClick={onPlanetEntry}>
                 星芽星球
               </a>
+              <a href="/lab">互动实验室</a>
+              <a href="#products">产品</a>
+              <a href="#path">课程</a>
               <a href="#events">活动</a>
             </nav>
             <div className="toon-nav-actions">

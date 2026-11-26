@@ -4,7 +4,7 @@ export default defineAppConfig({
   pages: previewMode
     ? [
         'pages/home/index',
-        'pages/family/index',
+        'pages/appointment/index',
         'pages/lab/index',
         'pages/lab/detail/index',
         'pages/lab/content/index',
@@ -15,7 +15,7 @@ export default defineAppConfig({
       ]
     : [
         'pages/home/index',
-        'pages/family/index',
+        'pages/appointment/index',
         'pages/lab/index',
         'pages/lab/detail/index',
         'pages/lab/content/index',
@@ -37,22 +37,16 @@ export default defineAppConfig({
         selectedIconPath: 'assets/tabbar/home-active.png',
       },
       {
-        pagePath: 'pages/family/index',
-        text: '家庭',
-        iconPath: 'assets/tabbar/home-default.png',
-        selectedIconPath: 'assets/tabbar/home-active.png',
+        pagePath: 'pages/planet/index',
+        text: '星球',
+        iconPath: 'assets/tabbar/planet-default.png',
+        selectedIconPath: 'assets/tabbar/planet-active.png',
       },
       {
         pagePath: 'pages/lab/index',
         text: '实验室',
         iconPath: 'assets/tabbar/lab-default.png',
         selectedIconPath: 'assets/tabbar/lab-active.png',
-      },
-      {
-        pagePath: 'pages/planet/index',
-        text: '星球',
-        iconPath: 'assets/tabbar/planet-default.png',
-        selectedIconPath: 'assets/tabbar/planet-active.png',
       },
       {
         pagePath: 'pages/profile/index',
