@@ -3,11 +3,20 @@ import { InMemoryAuthenticationSessionRepository } from './authentication-sessio
 import { InMemoryAuthenticationStateRepository } from './authentication-state.repository';
 import type { AuthenticationAdapters } from './authentication-boundaries';
 import { createLocalAuthenticationAdapters } from './authentication-boundaries';
+import { InMemoryConsumerAccountRepository } from './consumer-account.repository';
 
-function createAuthService(wechat?: {
-  code2session: (code: string) => Promise<{ openid: string; unionid?: string }>;
-  getPhoneNumber: (code: string) => Promise<{ phoneNumber: string }>;
-}) {
+function createAuthService(
+  wechat?: {
+    code2session: (
+      code: string,
+    ) => Promise<{ openid: string; unionid?: string }>;
+    getPhoneNumber: (code: string) => Promise<{ phoneNumber: string }>;
+  },
+  stores: {
+    sessions?: InMemoryAuthenticationSessionRepository;
+    consumerAccounts?: InMemoryConsumerAccountRepository;
+  } = {},
+) {
   const adapters: AuthenticationAdapters = {
     ...createLocalAuthenticationAdapters({
       verificationCode: '000000',
@@ -20,13 +29,22 @@ function createAuthService(wechat?: {
         }
       : {}),
   };
-  const sessions = new InMemoryAuthenticationSessionRepository();
+  const sessions =
+    stores.sessions ?? new InMemoryAuthenticationSessionRepository();
   const state = new InMemoryAuthenticationStateRepository();
-  return new AuthenticationService(adapters, sessions, state, {
-    get: () => {
-      throw new Error('parent binding lookup not needed in this spec');
-    },
-  } as never);
+  const consumerAccounts =
+    stores.consumerAccounts ?? new InMemoryConsumerAccountRepository();
+  return new AuthenticationService(
+    adapters,
+    sessions,
+    state,
+    consumerAccounts,
+    {
+      get: () => {
+        throw new Error('parent binding lookup not needed in this spec');
+      },
+    } as never,
+  );
 }
 
 describe('WeChat mini-program login (ADR-0006)', () => {
@@ -66,6 +84,56 @@ describe('WeChat mini-program login (ADR-0006)', () => {
     await service.bindWechatPhone(wechatSession.accessToken, 'phone-code-1');
     const merged = await service.loginWechat('wx-bind-1');
     expect(merged.actor.userAccountId).toBe(phoneAccountId);
+  });
+
+  it('keeps consumer accounts and profile ids across a service restart', async () => {
+    const sessions = new InMemoryAuthenticationSessionRepository();
+    const consumerAccounts = new InMemoryConsumerAccountRepository();
+    const first = createAuthService(resolver, { sessions, consumerAccounts });
+    const before = await first.loginWechat('wx-code-1');
+
+    const restarted = createAuthService(resolver, {
+      sessions,
+      consumerAccounts,
+    });
+    const restored = await restarted.restore(before.accessToken);
+    expect(restored.actor.userAccountId).toBe(before.actor.userAccountId);
+    const again = await restarted.loginWechat('wx-code-2');
+    expect(again.actor.userAccountId).toBe(before.actor.userAccountId);
+    expect(before.actor.userAccountId).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('logs a customer in with a platform-assigned account linked by phone', async () => {
+    const service = createAuthService(resolver);
+    await service.requestParentOtp('13700137000');
+    const otp = await service.verifyParentOtp('13700137000', '000000');
+
+    await expect(
+      service.loginParentWithPassword('star_family', 'Abc12345'),
+    ).rejects.toMatchObject({ status: 401 });
+    await service.assignConsumerCredentials({
+      phone: '13700137000',
+      username: 'Star_Family',
+      password: 'Abc12345',
+    });
+    const viaPassword = await service.loginParentWithPassword(
+      'star_family',
+      'Abc12345',
+    );
+    expect(viaPassword.actor.userAccountId).toBe(otp.actor.userAccountId);
+    await expect(
+      service.loginParentWithPassword('star_family', 'wrong-pass1'),
+    ).rejects.toMatchObject({ status: 401 });
+    await expect(
+      service.assignConsumerCredentials({
+        phone: '13600136000',
+        username: 'star_family',
+        password: 'Abc12345',
+      }),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(
+      (await service.listAssignedConsumerAccounts()).map((a) => a.username),
+    ).toEqual(['star_family']);
   });
 
   it('fails closed when the wechat resolver is missing', async () => {

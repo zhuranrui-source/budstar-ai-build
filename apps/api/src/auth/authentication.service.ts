@@ -1,14 +1,17 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   createHmac,
   randomBytes,
+  randomInt,
   randomUUID,
+  scryptSync,
   timingSafeEqual,
 } from 'node:crypto';
 import type {
   AuthenticatedSession,
-  AuthenticationChallenge,
   ConsumerIdentity,
   StaffRole,
 } from '@budstar/contracts';
@@ -25,6 +28,11 @@ import {
 } from './authentication-state.repository';
 import { AUTHENTICATION_ADAPTERS } from './authentication.tokens';
 import {
+  CONSUMER_ACCOUNT_REPOSITORY,
+  type ConsumerAccountRecord,
+  type ConsumerAccountRepository,
+} from './consumer-account.repository';
+import {
   PARENT_BINDING_LOOKUP,
   type ParentBindingLookup,
 } from './parent-binding.lookup';
@@ -33,7 +41,12 @@ type Account = {
   id: string;
   kind: AuthorizationActor['kind'];
   loginIdentifier: string;
+  /** 仅本地/测试夹具使用的明文密码；生产只接受 passwordHash。 */
   password?: string;
+  /** scrypt$<salt base64>$<hash base64> */
+  passwordHash?: string;
+  /** HMAC-SHA256(AUTH_TOKEN_SECRET, 手机号)，不存明文手机号。 */
+  phoneHash?: string;
   displayName: string;
   status: 'ACTIVE' | 'SUSPENDED';
   memberships?: Array<{
@@ -45,7 +58,7 @@ type Account = {
   studentProfileId?: string;
   activeIdentity?: ConsumerIdentity;
   activeStudentBindings?: string[];
-  wxOpenid?: string;
+  wechatOpenidHash?: string;
 };
 
 /** Local/dev fixtures when LOCAL_AUTH_ACCOUNTS_JSON is unset. Never used in production. */
@@ -109,8 +122,6 @@ export type IssuedAuthenticatedSession = AuthenticatedSession & {
 @Injectable()
 export class AuthenticationService {
   private readonly accounts = new Map<string, Account>();
-  /** ADR-0006：微信 openid → 账号 ID 索引（手机号绑定后指向合并账号）。 */
-  private readonly wxOpenidIndex = new Map<string, string>();
   private readonly tokenSecret: string;
 
   constructor(
@@ -120,6 +131,8 @@ export class AuthenticationService {
     private readonly sessions: AuthenticationSessionRepository,
     @Inject(AUTHENTICATION_STATE_REPOSITORY)
     private readonly authenticationState: AuthenticationStateRepository,
+    @Inject(CONSUMER_ACCOUNT_REPOSITORY)
+    private readonly consumerAccounts: ConsumerAccountRepository,
     private readonly moduleRef: ModuleRef,
   ) {
     const configuredSecret = process.env.AUTH_TOKEN_SECRET;
@@ -134,54 +147,203 @@ export class AuthenticationService {
   }
 
   async requestParentOtp(phone: string): Promise<{ sent: true }> {
-    await this.assertAttemptAllowed(`otp-request:${phone}`, 5, 5 * 60_000);
-    const code =
-      process.env.NODE_ENV === 'production'
-        ? String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
-        : process.env.LOCAL_VERIFICATION_CODE!;
-    const expiresAt = new Date(Date.now() + 5 * 60_000);
-    await this.adapters.verificationCodeStore.issue(phone, code, expiresAt);
-    await this.adapters.verificationCodeSender.send(phone, code);
+    await this.assertAttemptAllowed(
+      `otp-request:${this.digest(phone)}`,
+      5,
+      5 * 60_000,
+    );
+    await this.sendOtp(phone, this.otpDestination('parent', phone));
     return { sent: true };
   }
 
-  async verifyParentOtp(
+  /** 机构后台：仅已登记手机号的员工/平台管理员可收验证码。 */
+  async requestAdminOtp(phone: string): Promise<{ sent: true }> {
+    await this.assertAttemptAllowed(
+      `admin-otp-request:${this.digest(phone)}`,
+      5,
+      5 * 60_000,
+    );
+    this.findAdminByPhone(phone);
+    await this.sendOtp(phone, this.otpDestination('admin', phone));
+    return { sent: true };
+  }
+
+  async verifyAdminOtp(
     phone: string,
     code: string,
   ): Promise<IssuedAuthenticatedSession> {
-    await this.assertAttemptAllowed(`otp-verify:${phone}`, 5, 5 * 60_000);
+    await this.assertAttemptAllowed(
+      `admin-otp-verify:${this.digest(phone)}`,
+      5,
+      5 * 60_000,
+    );
     if (
       !(await this.adapters.verificationCodeStore.consume(
-        phone,
+        this.otpDestination('admin', phone),
         code,
         new Date(),
       ))
     ) {
       throw this.unauthorized();
     }
-    const accountId = `parent-${this.digest(phone).slice(0, 24)}`;
-    if (!this.accounts.has(accountId)) {
-      this.accounts.set(accountId, {
-        id: accountId,
-        kind: 'parent',
-        loginIdentifier: `phone:${this.digest(phone)}`,
+    return this.issueSession(this.findAdminByPhone(phone));
+  }
+
+  private findAdminByPhone(phone: string): Account {
+    const phoneHash = this.digest(phone);
+    const account = [...this.accounts.values()].find(
+      (candidate) =>
+        candidate.phoneHash === phoneHash &&
+        (candidate.kind === 'staff' || candidate.kind === 'platform-admin'),
+    );
+    if (!account) {
+      throw new ApiException(
+        403,
+        'ADMIN_PHONE_NOT_REGISTERED',
+        '该手机号未开通机构后台账号，请联系管理员',
+      );
+    }
+    return this.requireActive(account.id);
+  }
+
+  private async sendOtp(phone: string, destination: string): Promise<void> {
+    const code =
+      process.env.NODE_ENV === 'production'
+        ? String(randomInt(0, 1_000_000)).padStart(6, '0')
+        : process.env.LOCAL_VERIFICATION_CODE!;
+    const expiresAt = new Date(Date.now() + 5 * 60_000);
+    await this.adapters.verificationCodeStore.issue(
+      destination,
+      code,
+      expiresAt,
+    );
+    await this.adapters.verificationCodeSender.send(phone, code);
+  }
+
+  /** 验证码表只存手机号摘要，不落明文手机号。 */
+  private otpDestination(scope: 'parent' | 'admin', phone: string): string {
+    return `${scope}:${this.digest(phone)}`;
+  }
+
+  async verifyParentOtp(
+    phone: string,
+    code: string,
+  ): Promise<IssuedAuthenticatedSession> {
+    await this.assertAttemptAllowed(
+      `otp-verify:${this.digest(phone)}`,
+      5,
+      5 * 60_000,
+    );
+    if (
+      !(await this.adapters.verificationCodeStore.consume(
+        this.otpDestination('parent', phone),
+        code,
+        new Date(),
+      ))
+    ) {
+      throw this.unauthorized();
+    }
+    return this.issueSession(await this.findOrCreatePhoneAccount(phone));
+  }
+
+  /** 官网客户：平台统一分配的账号 + 密码。 */
+  async loginParentWithPassword(
+    username: string,
+    password: string,
+  ): Promise<IssuedAuthenticatedSession> {
+    const normalized = username.trim().toLowerCase();
+    await this.assertAttemptAllowed(
+      `password:parent:${normalized}`,
+      5,
+      5 * 60_000,
+    );
+    const record = await this.consumerAccounts.findByUsername(normalized);
+    const account = record ? this.cacheConsumer(record) : undefined;
+    if (!account?.passwordHash || !this.passwordMatches(account, password)) {
+      throw this.unauthorized();
+    }
+    const active = this.requireActive(account.id);
+    active.activeIdentity = 'parent';
+    return this.issueSession(active);
+  }
+
+  /**
+   * 平台为客户分配（或重置）账号密码。按手机号关联到同一客户：
+   * 客户用验证码登录或账号密码登录进入的是同一个账号。
+   */
+  async assignConsumerCredentials(input: {
+    phone: string;
+    username: string;
+    password: string;
+  }): Promise<{ userAccountId: string; username: string }> {
+    const username = input.username.trim().toLowerCase();
+    const account = await this.findOrCreatePhoneAccount(input.phone);
+    const owner = await this.consumerAccounts.findByUsername(username);
+    if (owner && owner.id !== account.id) {
+      throw new ApiException(409, 'CONFLICT', '该账号名已被其他客户使用');
+    }
+    const passwordHash = this.hashPassword(input.password);
+    await this.consumerAccounts.assignCredentials(
+      account.id,
+      username,
+      passwordHash,
+    );
+    account.passwordHash = passwordHash;
+    return { userAccountId: account.id, username };
+  }
+
+  listAssignedConsumerAccounts() {
+    return this.consumerAccounts.listAssigned();
+  }
+
+  private phoneLoginIdentifier(phone: string): string {
+    return `phone:${this.digest(phone)}`;
+  }
+
+  private async findOrCreatePhoneAccount(phone: string): Promise<Account> {
+    const loginIdentifier = this.phoneLoginIdentifier(phone);
+    const record =
+      (await this.consumerAccounts.findByLoginIdentifier(loginIdentifier)) ??
+      (await this.consumerAccounts.create({
+        loginIdentifier,
         displayName: '家长用户',
-        status: 'ACTIVE',
-        parentProfileId: randomUUID(),
-        studentProfileId: randomUUID(),
-        activeIdentity: 'parent',
-        activeStudentBindings: [],
-      });
-    }
-    const account = this.requireActive(accountId);
+      }));
+    const account = this.requireActive(this.cacheConsumer(record).id);
     account.activeIdentity = 'parent';
-    if (!account.parentProfileId) {
-      account.parentProfileId = randomUUID();
+    return account;
+  }
+
+  private cacheConsumer(record: ConsumerAccountRecord): Account {
+    const cached = this.accounts.get(record.id);
+    const account: Account = {
+      id: record.id,
+      kind: 'parent',
+      loginIdentifier: record.loginIdentifier,
+      displayName: record.displayName,
+      status: record.status,
+      parentProfileId: record.parentProfileId,
+      passwordHash: record.passwordHash ?? undefined,
+      wechatOpenidHash: record.wechatOpenidHash ?? undefined,
+      activeIdentity: cached?.activeIdentity ?? 'parent',
+      activeStudentBindings: cached?.activeStudentBindings ?? [],
+    };
+    this.accounts.set(record.id, account);
+    return account;
+  }
+
+  /** 内存缓存未命中时（如服务重启后）从数据库加载消费端账号。 */
+  private async loadAccount(accountId: string): Promise<Account> {
+    if (!this.accounts.has(accountId)) {
+      const record = await this.consumerAccounts.findById(accountId);
+      if (record) this.cacheConsumer(record);
     }
-    if (!account.studentProfileId) {
-      account.studentProfileId = randomUUID();
-    }
-    return this.issueSession(account);
+    return this.requireActive(accountId);
+  }
+
+  private hashPassword(password: string): string {
+    const salt = randomBytes(16);
+    const hash = scryptSync(password, salt, 32);
+    return `scrypt$${salt.toString('base64')}$${hash.toString('base64')}`;
   }
 
   /**
@@ -199,10 +361,15 @@ export class AuthenticationService {
       );
     }
     const { openid } = await resolver.code2session(code);
-    const existing = this.wxOpenidIndex.get(openid);
-    const account = existing
-      ? this.requireActive(existing)
-      : this.createWechatAccount(openid);
+    const wechatOpenidHash = this.digest(openid);
+    const record =
+      (await this.consumerAccounts.findByWechatOpenidHash(wechatOpenidHash)) ??
+      (await this.consumerAccounts.create({
+        loginIdentifier: `wechat:${wechatOpenidHash}`,
+        displayName: '微信用户',
+        wechatOpenidHash,
+      }));
+    const account = this.requireActive(this.cacheConsumer(record).id);
     account.activeIdentity = 'parent';
     return this.issueSession(account);
   }
@@ -224,54 +391,21 @@ export class AuthenticationService {
       );
     }
     const payload = this.verifyAccessToken(accessToken);
-    const current = this.requireActive(payload.sub);
+    const current = await this.loadAccount(payload.sub);
     if (!(await this.sessions.isActive(payload.sid, payload.sub, new Date()))) {
       throw this.unauthorized();
     }
     const { phoneNumber } = await resolver.getPhoneNumber(code);
-    const phoneAccountId = `parent-${this.digest(phoneNumber).slice(0, 24)}`;
-    let target = this.accounts.get(phoneAccountId);
-    if (!target) {
-      target = {
-        id: phoneAccountId,
-        kind: 'parent',
-        loginIdentifier: `phone:${this.digest(phoneNumber)}`,
-        displayName: '家长用户',
-        status: 'ACTIVE',
-        parentProfileId: randomUUID(),
-        wxOpenid: current.wxOpenid,
-        activeIdentity: 'parent',
-        activeStudentBindings: [],
-      };
-      this.accounts.set(phoneAccountId, target);
+    const target = await this.findOrCreatePhoneAccount(phoneNumber);
+    if (current.wechatOpenidHash && current.id !== target.id) {
+      await this.consumerAccounts.linkWechat(
+        target.id,
+        current.wechatOpenidHash,
+      );
+      target.wechatOpenidHash = current.wechatOpenidHash;
+      current.wechatOpenidHash = undefined;
     }
-    if (current.wxOpenid) {
-      target.wxOpenid = current.wxOpenid;
-      this.wxOpenidIndex.set(current.wxOpenid, phoneAccountId);
-    }
-    if (!target.parentProfileId) {
-      target.parentProfileId = randomUUID();
-    }
-    target.activeIdentity = 'parent';
     return this.issueSession(target);
-  }
-
-  private createWechatAccount(openid: string): Account {
-    const accountId = `wx-${this.digest(openid).slice(0, 24)}`;
-    const account: Account = {
-      id: accountId,
-      kind: 'parent',
-      loginIdentifier: `wechat:${openid}`,
-      displayName: '微信用户',
-      status: 'ACTIVE',
-      parentProfileId: randomUUID(),
-      wxOpenid: openid,
-      activeIdentity: 'parent',
-      activeStudentBindings: [],
-    };
-    this.accounts.set(accountId, account);
-    this.wxOpenidIndex.set(openid, accountId);
-    return account;
   }
 
   /**
@@ -296,7 +430,7 @@ export class AuthenticationService {
     identity: ConsumerIdentity,
   ): Promise<IssuedAuthenticatedSession> {
     const payload = this.verifyAccessToken(accessToken);
-    const account = this.requireActive(payload.sub);
+    const account = await this.loadAccount(payload.sub);
     if (!(await this.sessions.isActive(payload.sid, payload.sub, new Date()))) {
       throw this.unauthorized();
     }
@@ -318,47 +452,20 @@ export class AuthenticationService {
     return this.reissueAccessToken(account, payload.sid);
   }
 
-  async beginPrivilegedLogin(
+  /** 机构后台账号密码登录（已取消固定二次验证码）。 */
+  async loginWithPassword(
     loginIdentifier: string,
     password: string,
     kind: 'staff' | 'partner' | 'platform-admin',
-  ): Promise<AuthenticationChallenge> {
+  ): Promise<IssuedAuthenticatedSession> {
     await this.assertAttemptAllowed(
       `password:${kind}:${loginIdentifier}`,
       5,
       5 * 60_000,
     );
-    const account = this.verifyPassword(loginIdentifier, password, kind);
-    const challengeToken = this.randomToken();
-    await this.authenticationState.createChallenge({
-      tokenHash: this.digest(challengeToken),
-      accountId: account.id,
-      intendedKind: kind,
-      expiresAt: new Date(Date.now() + 5 * 60_000),
-    });
-    return { challengeToken, secondFactorRequired: true };
-  }
-
-  async completePrivilegedLogin(
-    challengeToken: string,
-    code: string,
-    kind: 'staff' | 'partner' | 'platform-admin',
-  ): Promise<IssuedAuthenticatedSession> {
-    const challengeHash = this.digest(challengeToken);
-    const challenge = await this.authenticationState.attemptChallenge(
-      challengeHash,
-      kind,
-      new Date(Date.now()),
-      5,
+    return this.issueSession(
+      this.verifyPassword(loginIdentifier, password, kind),
     );
-    if (challenge.status === 'invalid') throw this.unauthorized();
-    if (challenge.status === 'rate-limited') throw this.rateLimited();
-    const account = this.requireActive(challenge.accountId);
-    if (!(await this.adapters.secondFactorVerifier.verify(account.id, code))) {
-      throw this.unauthorized();
-    }
-    await this.authenticationState.completeChallenge(challengeHash);
-    return this.issueSession(account);
   }
 
   async refresh(refreshToken: string): Promise<IssuedAuthenticatedSession> {
@@ -376,7 +483,7 @@ export class AuthenticationService {
       throw this.unauthorized();
     }
     return this.issueSession(
-      this.requireActive(result.accountId),
+      await this.loadAccount(result.accountId),
       result.sessionId,
       nextRefreshToken,
     );
@@ -399,7 +506,7 @@ export class AuthenticationService {
     sessionId: string;
   }> {
     const payload = this.verifyAccessToken(accessToken);
-    const account = this.requireActive(payload.sub);
+    const account = await this.loadAccount(payload.sub);
     if (!(await this.sessions.isActive(payload.sid, payload.sub, new Date()))) {
       throw this.unauthorized();
     }
@@ -481,14 +588,32 @@ export class AuthenticationService {
         candidate.loginIdentifier === loginIdentifier &&
         candidate.kind === kind,
     );
-    const actual = Buffer.from(this.digest(password));
-    const expected = Buffer.from(
-      this.digest(account?.password ?? 'invalid-secret'),
-    );
-    if (!account || !timingSafeEqual(actual, expected)) {
+    if (!account || !this.passwordMatches(account, password)) {
       throw this.unauthorized();
     }
     return this.requireActive(account.id);
+  }
+
+  private passwordMatches(account: Account, password: string): boolean {
+    if (account.passwordHash) {
+      const [scheme, salt, hash] = account.passwordHash.split('$');
+      if (scheme !== 'scrypt' || !salt || !hash) return false;
+      const expected = Buffer.from(hash, 'base64');
+      const actual = scryptSync(
+        password,
+        Buffer.from(salt, 'base64'),
+        expected.length,
+      );
+      return timingSafeEqual(actual, expected);
+    }
+    // 生产环境拒绝明文密码配置。
+    if (process.env.NODE_ENV === 'production' || !account.password) {
+      return false;
+    }
+    return timingSafeEqual(
+      Buffer.from(this.digest(password)),
+      Buffer.from(this.digest(account.password)),
+    );
   }
 
   private requireActive(accountId: string): Account {
@@ -720,7 +845,21 @@ export class AuthenticationService {
   }
 
   private localAccountsFromEnvironment(): Account[] {
-    if (process.env.NODE_ENV === 'production') return [];
+    // 试点部署：生产从 /opt/budstar/api/config/production-accounts.json 读取
+    if (process.env.NODE_ENV === 'production') {
+      const accountsPath = path.resolve(
+        process.cwd(),
+        'config/production-accounts.json',
+      );
+      if (fs.existsSync(accountsPath)) {
+        try {
+          return JSON.parse(fs.readFileSync(accountsPath, 'utf8')) as Account[];
+        } catch {
+          console.error('Failed to parse production accounts JSON');
+        }
+      }
+      return [];
+    }
     const raw = process.env.LOCAL_AUTH_ACCOUNTS_JSON;
     const parsed = JSON.parse(
       raw ?? JSON.stringify(DEFAULT_LOCAL_AUTH_ACCOUNTS),

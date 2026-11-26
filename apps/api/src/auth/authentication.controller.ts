@@ -3,10 +3,10 @@ import type { Response } from 'express';
 import {
   parentOtpRequestSchema,
   parentOtpVerifySchema,
+  parentPasswordLoginSchema,
   wechatBindPhoneSchema,
   wechatCodeLoginSchema,
   passwordLoginSchema,
-  secondFactorSchema,
   switchConsumerIdentitySchema,
 } from '@budstar/contracts';
 import { AuditService } from '../audit/audit.service';
@@ -42,6 +42,42 @@ export class AuthenticationController {
     return this.attachRefreshCookie(response, session);
   }
 
+  @Post('parent/password-login')
+  @Public()
+  async loginParentWithPassword(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const input = this.parse(parentPasswordLoginSchema, body);
+    const session = await this.withLoginAudit(() =>
+      this.authentication.loginParentWithPassword(
+        input.username,
+        input.password,
+      ),
+    );
+    return this.attachRefreshCookie(response, session);
+  }
+
+  @Post('admin/request-otp')
+  @Public()
+  requestAdminOtp(@Body() body: unknown) {
+    const input = this.parse(parentOtpRequestSchema, body);
+    return this.authentication.requestAdminOtp(input.phone);
+  }
+
+  @Post('admin/verify-otp')
+  @Public()
+  async verifyAdminOtp(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const input = this.parse(parentOtpVerifySchema, body);
+    const session = await this.withLoginAudit(() =>
+      this.authentication.verifyAdminOtp(input.phone, input.code),
+    );
+    return this.attachRefreshCookie(response, session);
+  }
+
   @Post('student/login')
   @Public()
   async loginStudent(@Body() body: unknown) {
@@ -69,41 +105,36 @@ export class AuthenticationController {
 
   @Post('staff/login')
   @Public()
-  async loginStaff(@Body() body: unknown) {
-    const input = this.parse(passwordLoginSchema, body);
-    return this.withLoginAudit(
-      () =>
-        this.authentication.beginPrivilegedLogin(
-          input.loginIdentifier,
-          input.password,
-          'staff',
-        ),
-      false,
-    );
-  }
-
-  @Post('staff/verify-second-factor')
-  @Public()
-  verifyStaffSecondFactor(
+  async loginStaff(
     @Body() body: unknown,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.completeSecondFactor(body, 'staff', response);
+    const input = this.parse(passwordLoginSchema, body);
+    const session = await this.withLoginAudit(() =>
+      this.authentication.loginWithPassword(
+        input.loginIdentifier,
+        input.password,
+        'staff',
+      ),
+    );
+    return this.attachRefreshCookie(response, session);
   }
 
   @Post('platform/login')
   @Public()
-  async loginPlatformAdmin(@Body() body: unknown) {
+  async loginPlatformAdmin(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const input = this.parse(passwordLoginSchema, body);
-    return this.withLoginAudit(
-      () =>
-        this.authentication.beginPrivilegedLogin(
-          input.loginIdentifier,
-          input.password,
-          'platform-admin',
-        ),
-      false,
+    const session = await this.withLoginAudit(() =>
+      this.authentication.loginWithPassword(
+        input.loginIdentifier,
+        input.password,
+        'platform-admin',
+      ),
     );
+    return this.attachRefreshCookie(response, session);
   }
 
   @Post('wechat/login')
@@ -133,35 +164,19 @@ export class AuthenticationController {
 
   @Post('partner/login')
   @Public()
-  async loginPartner(@Body() body: unknown) {
+  async loginPartner(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const input = this.parse(passwordLoginSchema, body);
-    return this.withLoginAudit(
-      () =>
-        this.authentication.beginPrivilegedLogin(
-          input.loginIdentifier,
-          input.password,
-          'partner',
-        ),
-      false,
+    const session = await this.withLoginAudit(() =>
+      this.authentication.loginWithPassword(
+        input.loginIdentifier,
+        input.password,
+        'partner',
+      ),
     );
-  }
-
-  @Post('partner/verify-second-factor')
-  @Public()
-  verifyPartnerSecondFactor(
-    @Body() body: unknown,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    return this.completeSecondFactor(body, 'partner', response);
-  }
-
-  @Post('platform/verify-second-factor')
-  @Public()
-  verifyPlatformSecondFactor(
-    @Body() body: unknown,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    return this.completeSecondFactor(body, 'platform-admin', response);
+    return this.attachRefreshCookie(response, session);
   }
 
   @Post('refresh')
@@ -196,22 +211,6 @@ export class AuthenticationController {
   @Get('session')
   async session(@Req() request: AuthenticatedRequest) {
     return this.authentication.restore(this.bearerToken(request));
-  }
-
-  private async completeSecondFactor(
-    body: unknown,
-    kind: 'staff' | 'partner' | 'platform-admin',
-    response: Response,
-  ) {
-    const input = this.parse(secondFactorSchema, body);
-    const session = await this.withLoginAudit(() =>
-      this.authentication.completePrivilegedLogin(
-        input.challengeToken,
-        input.code,
-        kind,
-      ),
-    );
-    return this.attachRefreshCookie(response, session);
   }
 
   private async withLoginAudit<T>(

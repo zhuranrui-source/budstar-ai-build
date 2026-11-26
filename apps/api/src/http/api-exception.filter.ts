@@ -33,6 +33,9 @@ const messagesByStatus: Partial<Record<number, string>> = {
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
+    if (process.env.DSH_DEBUG) {
+      console.error('[filter]', (exception as Error)?.stack ?? exception);
+    }
     const response = host.switchToHttp().getResponse<Response>();
     const status = this.getStatus(exception);
     const explicit =

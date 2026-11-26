@@ -57,6 +57,7 @@ export class PrismaSubjectCourseStore implements SubjectCourseStore {
   }
 
   async findById(id: string): Promise<SubjectCourseRecord | null> {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
     const row = await this.prisma.client.subjectCourse.findUnique({
       where: { id },
       include: { chapters: true },

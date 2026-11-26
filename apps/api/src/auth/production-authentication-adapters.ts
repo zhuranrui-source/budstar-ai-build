@@ -79,7 +79,6 @@ export function createProductionAuthenticationAdapters(
 ): AuthenticationAdapters {
   const missing = [
     ...(config.tencentSms ? [] : ['tencent-sms']),
-    ...(config.secondFactor ? [] : ['second-factor']),
     ...(config.wechatMiniapp ? [] : ['wechat-miniapp']),
   ];
   return {

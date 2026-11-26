@@ -157,6 +157,10 @@ model UserAccount {
   credentialHash             String?                        @db.VarChar(255)
   secondFactorSubject        String?                        @db.VarChar(255)
   platformRole               PlatformRole?
+  /// HMAC-SHA256(AUTH_TOKEN_SECRET, 微信 openid)，不存明文 openid
+  wechatOpenidHash           String?                        @unique @db.Char(64)
+  /// 官网客户账号名（平台统一分配）
+  username                   String?                        @unique @db.VarChar(32)
   createdAt                  DateTime                       @default(now())
   updatedAt                  DateTime                       @updatedAt
   parentProfiles             ParentProfile[]

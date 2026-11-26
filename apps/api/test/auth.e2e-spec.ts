@@ -2,15 +2,12 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes, scryptSync } from 'node:crypto';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { AuditService } from '../src/audit/audit.service';
 import { AuthenticationService } from '../src/auth/authentication.service';
-import type {
-  AuthenticatedSession,
-  AuthenticationChallenge,
-} from '@budstar/contracts';
+import type { AuthenticatedSession } from '@budstar/contracts';
 
 function requireSession(value: unknown): AuthenticatedSession {
   if (
@@ -29,17 +26,25 @@ function requireSession(value: unknown): AuthenticatedSession {
 describe('authentication and authorization API (e2e)', () => {
   let app: INestApplication<App>;
   const tokenSecret = 'integration-test-token-secret';
+  const staffPhone = '13600136000';
+  const platformPhone = '13500135000';
+  const phoneHash = (phone: string) =>
+    createHmac('sha256', tokenSecret).update(phone).digest('hex');
+  const scryptHash = (password: string) => {
+    const salt = randomBytes(16);
+    return `scrypt$${salt.toString('base64')}$${scryptSync(password, salt, 32).toString('base64')}`;
+  };
 
   beforeEach(async () => {
     process.env.AUTH_TOKEN_SECRET = tokenSecret;
     process.env.LOCAL_VERIFICATION_CODE = '000000';
-    process.env.LOCAL_SECOND_FACTOR_CODE = '000000';
     process.env.LOCAL_AUTH_ACCOUNTS_JSON = JSON.stringify([
       {
         id: 'staff-local',
         kind: 'staff',
         loginIdentifier: 'staff@local',
         password: 'Password123!',
+        phoneHash: phoneHash(staffPhone),
         displayName: '本地教务',
         status: 'ACTIVE',
         memberships: [
@@ -54,7 +59,8 @@ describe('authentication and authorization API (e2e)', () => {
         id: 'platform-local',
         kind: 'platform-admin',
         loginIdentifier: 'platform@local',
-        password: 'Platform123!',
+        passwordHash: scryptHash('Platform123!'),
+        phoneHash: phoneHash(platformPhone),
         displayName: '本地平台管理员',
         status: 'ACTIVE',
       },
@@ -98,18 +104,12 @@ describe('authentication and authorization API (e2e)', () => {
   async function staffSession(
     agent = request.agent(app.getHttpServer()),
   ): Promise<AuthenticatedSession> {
-    const challengeResponse = await agent
+    const sessionResponse = await agent
       .post('/api/auth/staff/login')
       .send({
         loginIdentifier: 'staff@local',
         password: 'Password123!',
       })
-      .expect(201);
-    const challenge =
-      challengeResponse.body as unknown as AuthenticationChallenge;
-    const sessionResponse = await agent
-      .post('/api/auth/staff/verify-second-factor')
-      .send({ challengeToken: challenge.challengeToken, code: '000000' })
       .expect(201);
     const responseBody: unknown = sessionResponse.body;
     return requireSession(responseBody);
@@ -213,7 +213,7 @@ describe('authentication and authorization API (e2e)', () => {
     expect(rejected.body).toMatchObject({ code: 'STUDENT_LOGIN_DISABLED' });
   });
 
-  it('requires staff 2FA, explicit campus context and combined role capability', async () => {
+  it('requires staff login, explicit campus context and combined role capability', async () => {
     const session = await staffSession();
     await request(app.getHttpServer())
       .get('/api/admin/overview')
@@ -236,15 +236,9 @@ describe('authentication and authorization API (e2e)', () => {
 
   it('lets a partner view published content and denies staff access', async () => {
     const agent = request.agent(app.getHttpServer());
-    const challengeResponse = await agent
+    const partnerResponse = await agent
       .post('/api/auth/partner/login')
       .send({ loginIdentifier: 'partner@local', password: 'Partner123!' })
-      .expect(201);
-    const challenge =
-      challengeResponse.body as unknown as AuthenticationChallenge;
-    const partnerResponse = await agent
-      .post('/api/auth/partner/verify-second-factor')
-      .send({ challengeToken: challenge.challengeToken, code: '000000' })
       .expect(201);
     const partner = requireSession(partnerResponse.body as unknown);
     expect(partner.actor.kind).toBe('partner');
@@ -262,7 +256,7 @@ describe('authentication and authorization API (e2e)', () => {
       .expect(403);
   });
 
-  it('rate-limits password, OTP and second-factor guessing', async () => {
+  it('rate-limits password and OTP guessing', async () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       await request(app.getHttpServer())
         .post('/api/auth/staff/login')
@@ -291,63 +285,131 @@ describe('authentication and authorization API (e2e)', () => {
       .send({ phone: '13900139000', code: '111111' })
       .expect(429);
 
-    const challenge = await request(app.getHttpServer())
-      .post('/api/auth/staff/login')
-      .send({
-        loginIdentifier: 'staff@local',
-        password: 'Password123!',
-      })
-      .expect(201);
-    const token = (challenge.body as AuthenticationChallenge).challengeToken;
     for (let attempt = 0; attempt < 5; attempt += 1) {
       await request(app.getHttpServer())
-        .post('/api/auth/staff/verify-second-factor')
-        .send({ challengeToken: token, code: '111111' })
+        .post('/api/auth/admin/verify-otp')
+        .send({ phone: staffPhone, code: '111111' })
         .expect(401);
     }
     await request(app.getHttpServer())
-      .post('/api/auth/staff/verify-second-factor')
-      .send({ challengeToken: token, code: '111111' })
+      .post('/api/auth/admin/verify-otp')
+      .send({ phone: staffPhone, code: '111111' })
       .expect(429);
   });
 
-  it('rejects an actually expired second-factor challenge', async () => {
-    const now = Date.now();
-    const clock = jest.spyOn(Date, 'now').mockReturnValue(now);
-    const challenge = await request(app.getHttpServer())
-      .post('/api/auth/staff/login')
-      .send({
-        loginIdentifier: 'staff@local',
-        password: 'Password123!',
-      })
+  it('logs staff and platform admins in by registered phone OTP only', async () => {
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/request-otp')
+      .send({ phone: staffPhone })
       .expect(201);
-    clock.mockReturnValue(now + 5 * 60_000 + 1);
+    const staff = await request(app.getHttpServer())
+      .post('/api/auth/admin/verify-otp')
+      .send({ phone: staffPhone, code: '000000' })
+      .expect(201);
+    expect(requireSession(staff.body as unknown).actor.kind).toBe('staff');
+    expect(cookieFrom(staff)).toContain('budstar_refresh=');
+
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/request-otp')
+      .send({ phone: platformPhone })
+      .expect(201);
+    const platform = await request(app.getHttpServer())
+      .post('/api/auth/admin/verify-otp')
+      .send({ phone: platformPhone, code: '000000' })
+      .expect(201);
+    expect(requireSession(platform.body as unknown).actor.kind).toBe(
+      'platform-admin',
+    );
+
+    const unknown = await request(app.getHttpServer())
+      .post('/api/auth/admin/request-otp')
+      .send({ phone: '13800138000' })
+      .expect(403);
+    expect(unknown.body).toMatchObject({ code: 'ADMIN_PHONE_NOT_REGISTERED' });
+
+    // 家长验证码不能用于后台登录
+    await request(app.getHttpServer())
+      .post('/api/auth/parent/request-otp')
+      .send({ phone: staffPhone })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/auth/admin/verify-otp')
+      .send({ phone: staffPhone, code: '000000' })
+      .expect(401);
+  });
+
+  it('lets only platform admins assign customer accounts used for web login', async () => {
+    const platform = await request(app.getHttpServer())
+      .post('/api/auth/platform/login')
+      .send({ loginIdentifier: 'platform@local', password: 'Platform123!' })
+      .expect(201);
+    const platformToken = requireSession(platform.body as unknown).accessToken;
+    const staff = await staffSession();
+
+    const payload = {
+      phone: '13300133000',
+      username: 'family_01',
+      password: 'Abc12345',
+    };
+    await request(app.getHttpServer())
+      .post('/api/platform/consumer-accounts')
+      .set('Authorization', `Bearer ${staff.accessToken}`)
+      .send(payload)
+      .expect(403);
+    await request(app.getHttpServer())
+      .post('/api/platform/consumer-accounts')
+      .set('Authorization', `Bearer ${platformToken}`)
+      .send({ ...payload, password: 'short' })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post('/api/platform/consumer-accounts')
+      .set('Authorization', `Bearer ${platformToken}`)
+      .send(payload)
+      .expect(201);
+    const listed = await request(app.getHttpServer())
+      .get('/api/platform/consumer-accounts')
+      .set('Authorization', `Bearer ${platformToken}`)
+      .expect(200);
+    expect(JSON.stringify(listed.body)).not.toContain('13300133000');
+
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/parent/password-login')
+      .send({ username: 'family_01', password: 'Abc12345' })
+      .expect(201);
+    expect(requireSession(login.body as unknown).actor.kind).toBe('parent');
+    expect(cookieFrom(login)).toContain('budstar_refresh=');
+
+    await request(app.getHttpServer())
+      .post('/api/auth/parent/request-otp')
+      .send({ phone: '13300133000' })
+      .expect(201);
+    const otp = await request(app.getHttpServer())
+      .post('/api/auth/parent/verify-otp')
+      .send({ phone: '13300133000', code: '000000' })
+      .expect(201);
+    expect(requireSession(otp.body as unknown).actor.userAccountId).toBe(
+      requireSession(login.body as unknown).actor.userAccountId,
+    );
+  });
+
+  it('verifies scrypt password hashes and removes second-factor endpoints', async () => {
+    await request(app.getHttpServer())
+      .post('/api/auth/platform/login')
+      .send({ loginIdentifier: 'platform@local', password: 'wrong-password' })
+      .expect(401);
     await request(app.getHttpServer())
       .post('/api/auth/staff/verify-second-factor')
-      .send({
-        challengeToken: (challenge.body as AuthenticationChallenge)
-          .challengeToken,
-        code: '000000',
-      })
-      .expect(401);
-    clock.mockRestore();
+      .send({ challengeToken: 'x', code: '000000' })
+      .expect(404);
   });
 
   it('rotates cookies and revokes the whole family when an old token is replayed', async () => {
     const agent = request.agent(app.getHttpServer());
-    const challenge = await agent
+    const login = await agent
       .post('/api/auth/staff/login')
       .send({
         loginIdentifier: 'staff@local',
         password: 'Password123!',
-      })
-      .expect(201);
-    const login = await agent
-      .post('/api/auth/staff/verify-second-factor')
-      .send({
-        challengeToken: (challenge.body as AuthenticationChallenge)
-          .challengeToken,
-        code: '000000',
       })
       .expect(201);
     const originalCookie = cookieFrom(login);
@@ -370,19 +432,11 @@ describe('authentication and authorization API (e2e)', () => {
 
   it('allows only one concurrent refresh and invalidates the winner after reuse detection', async () => {
     const agent = request.agent(app.getHttpServer());
-    const challenge = await agent
+    const login = await agent
       .post('/api/auth/staff/login')
       .send({
         loginIdentifier: 'staff@local',
         password: 'Password123!',
-      })
-      .expect(201);
-    const login = await agent
-      .post('/api/auth/staff/verify-second-factor')
-      .send({
-        challengeToken: (challenge.body as AuthenticationChallenge)
-          .challengeToken,
-        code: '000000',
       })
       .expect(201);
     const originalCookie = cookieFrom(login);
@@ -406,19 +460,11 @@ describe('authentication and authorization API (e2e)', () => {
   });
 
   it('keeps platform administrators out of campus business data', async () => {
-    const challenge = await request(app.getHttpServer())
+    const sessionResponse = await request(app.getHttpServer())
       .post('/api/auth/platform/login')
       .send({
         loginIdentifier: 'platform@local',
         password: 'Platform123!',
-      })
-      .expect(201);
-    const sessionResponse = await request(app.getHttpServer())
-      .post('/api/auth/platform/verify-second-factor')
-      .send({
-        challengeToken: (challenge.body as unknown as AuthenticationChallenge)
-          .challengeToken,
-        code: '000000',
       })
       .expect(201);
     const session = sessionResponse.body as unknown as AuthenticatedSession;

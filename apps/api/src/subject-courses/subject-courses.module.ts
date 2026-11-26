@@ -7,6 +7,7 @@ import { PartnerSubjectCoursesController } from './partner-subject-courses.contr
 import { FamilySubjectCoursesController } from './family-subject-courses.controller';
 import { PlatformSubjectCoursesController } from './platform-subject-courses.controller';
 import { SubjectCourseStaticController } from './subject-course-static.controller';
+import { PublicSubjectCoursesController } from './public-subject-courses.controller';
 import {
   InMemorySubjectCourseStore,
   SubjectCoursesService,
@@ -22,6 +23,7 @@ export const SUBJECT_COURSE_STORE = Symbol('SUBJECT_COURSE_STORE');
     PartnerSubjectCoursesController,
     FamilySubjectCoursesController,
     SubjectCourseStaticController,
+    PublicSubjectCoursesController,
   ],
   providers: [
     {

@@ -14,8 +14,14 @@ import {
   PrismaAuthenticationStateRepository,
 } from './authentication-state.repository';
 import { AuthenticationController } from './authentication.controller';
+import { PlatformConsumerAccountsController } from './platform-consumer-accounts.controller';
 import { AuthenticationService } from './authentication.service';
 import { AUTHENTICATION_ADAPTERS } from './authentication.tokens';
+import {
+  CONSUMER_ACCOUNT_REPOSITORY,
+  InMemoryConsumerAccountRepository,
+  PrismaConsumerAccountRepository,
+} from './consumer-account.repository';
 import {
   createProductionAuthenticationAdapters,
   productionAuthenticationAdapterConfig,
@@ -23,7 +29,7 @@ import {
 
 @Module({
   imports: [AuditModule, DatabaseModule],
-  controllers: [AuthenticationController],
+  controllers: [AuthenticationController, PlatformConsumerAccountsController],
   providers: [
     {
       provide: AUTHENTICATION_ADAPTERS,
@@ -63,6 +69,19 @@ import {
       inject: [
         InMemoryAuthenticationStateRepository,
         PrismaAuthenticationStateRepository,
+      ],
+    },
+    InMemoryConsumerAccountRepository,
+    PrismaConsumerAccountRepository,
+    {
+      provide: CONSUMER_ACCOUNT_REPOSITORY,
+      useFactory: (
+        memory: InMemoryConsumerAccountRepository,
+        prisma: PrismaConsumerAccountRepository,
+      ) => (process.env.NODE_ENV === 'production' ? prisma : memory),
+      inject: [
+        InMemoryConsumerAccountRepository,
+        PrismaConsumerAccountRepository,
       ],
     },
     AuthenticationService,
