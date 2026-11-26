@@ -94,7 +94,7 @@ describe('auth landing rules', () => {
   });
 
   it('maps identities to landing paths', () => {
-    expect(landingPathForIdentity('parent')).toBe('/family');
-    expect(landingPathForIdentity('student')).toBe('/learning');
+    expect(landingPathForIdentity('parent')).toBe('/planet');
+    expect(landingPathForIdentity('student')).toBe('/planet');
   });
 });

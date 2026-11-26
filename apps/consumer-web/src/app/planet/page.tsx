@@ -3,8 +3,8 @@ import { controlledRouteRobots } from '../route-policy';
 import PlanetFeedPage from './planet-feed';
 
 export const metadata: Metadata = {
-  title: '星芽星球｜受控家庭入口',
-  description: '星芽星球仅面向已授权家庭和教学组织开放。',
+  title: '星芽星球｜作品、竞赛与星芽故事',
+  description: '孩子们的课堂作品、竞赛成果，以及星芽的课程与文化。',
   robots: controlledRouteRobots,
 };
 

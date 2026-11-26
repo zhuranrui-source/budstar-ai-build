@@ -428,3 +428,233 @@ textarea {
   font-size: 12px;
   line-height: 1.5;
 }
+
+/* ===== 星球内容管理 ===== */
+.planet-admin {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .planet-admin {
+    grid-template-columns: 1fr;
+  }
+}
+
+.planet-admin-form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.planet-admin-form h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.planet-admin-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+}
+
+.planet-admin-form input:not([type='checkbox']),
+.planet-admin-form select,
+.planet-admin-form textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 9px;
+  background: #fbfaf8;
+  color: var(--app-ink, #20201f);
+  font: inherit;
+  font-size: 13px;
+}
+
+.planet-admin-form .planet-admin-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--app-ink, #20201f);
+  line-height: 1.5;
+}
+
+.planet-admin-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.planet-admin-images figure {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f1efea;
+}
+
+.planet-admin-images img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.planet-admin-images figure button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+}
+
+.planet-admin-add {
+  display: grid !important;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px dashed var(--app-line, #c9c7c0);
+  border-radius: 8px;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.planet-admin-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.planet-admin-filter button {
+  padding: 6px 12px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.planet-admin-filter button.is-active {
+  border-color: var(--app-ink, #20201f);
+  background: var(--app-ink, #20201f);
+  color: #fff;
+}
+
+.planet-admin-list {
+  display: grid;
+  gap: 10px;
+}
+
+.planet-admin-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.planet-admin-item.is-comment {
+  grid-template-columns: 1fr auto;
+}
+
+.planet-admin-item img,
+.planet-admin-noimg {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.planet-admin-noimg {
+  display: grid;
+  place-items: center;
+  background: #f1efea;
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+}
+
+.planet-admin-item > div:first-of-type,
+.planet-admin-item.is-comment > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.planet-admin-item b {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.planet-admin-item b em {
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fdebe5;
+  color: var(--app-accent-deep, #7d2f20);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.planet-admin-item small {
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+}
+
+.planet-admin-reason {
+  color: var(--app-accent-deep, #7d2f20) !important;
+}
+
+.planet-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.planet-admin-actions button {
+  padding: 5px 10px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.planet-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.planet-status.is-published {
+  background: #e7f4ea;
+  color: #23633a;
+}
+
+.planet-status.is-pending_review {
+  background: #fff3d6;
+  color: #7a5300;
+}
+
+.planet-status.is-removed {
+  background: #eeeeec;
+  color: #6e6d69;
+}

@@ -380,6 +380,18 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
           {(isPlatformAdmin
             ? [
                 {
+                  title: '星球内容',
+                  value: '发布与管理',
+                  description: '学生作品、竞赛成果、公司文化与课程内容',
+                  href: '/planet',
+                },
+                {
+                  title: '评论管理',
+                  value: '先发后审',
+                  description: '处理被拦下的评论，下架不当评论',
+                  href: '/planet/comments',
+                },
+                {
                   title: '学科内容库',
                   value:
                     stats.courses === null
@@ -406,15 +418,27 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
                 {
                   title: '星芽星球',
                   value: '查看前台',
-                  description: '学生作品、竞赛成果与公司文化展示',
+                  description: '在官网查看展示效果',
                   href: 'https://budstar-ai.site/planet',
                 },
               ]
             : [
                 {
+                  title: '星球内容',
+                  value: '发布与管理',
+                  description: '学生作品、竞赛成果、公司文化与课程内容',
+                  href: '/planet',
+                },
+                {
+                  title: '评论管理',
+                  value: '先发后审',
+                  description: '处理被拦下的评论，下架不当评论',
+                  href: '/planet/comments',
+                },
+                {
                   title: '星芽星球',
                   value: '查看前台',
-                  description: '学生作品、竞赛成果与公司文化展示',
+                  description: '在官网查看展示效果',
                   href: 'https://budstar-ai.site/planet',
                 },
               ]

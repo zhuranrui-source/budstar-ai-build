@@ -11,6 +11,7 @@ import { CrmModule } from './crm/crm.module';
 import { FamilyModule } from './family/family.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { CommunityModule } from './community/community.module';
+import { PlanetModule } from './planet/planet.module';
 import { PlatformModule } from './platform/platform.module';
 import { ObjectStorageModule } from './object-storage/object-storage.module';
 import { SubmissionsModule } from './submissions/submissions.module';
@@ -28,6 +29,7 @@ import { SubjectCoursesModule } from './subject-courses/subject-courses.module';
     FamilyModule,
     FeedbackModule,
     CommunityModule,
+    PlanetModule,
     PlatformModule,
     ObjectStorageModule,
     SubmissionsModule,

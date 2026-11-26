@@ -2,6 +2,7 @@ import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
   json,
+  raw,
   urlencoded,
   type NextFunction,
   type Request,
@@ -38,6 +39,11 @@ export function configureApp(app: INestApplication) {
   app.use(
     '/api/platform/subject-courses',
     json({ limit: process.env.SUBJECT_COURSE_BODY_LIMIT ?? '4mb' }),
+  );
+  // 星球图片上传：原始二进制，格式由服务端按文件头校验。
+  app.use(
+    '/api/planet/images',
+    raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: '4mb' }),
   );
   app.use(json({ limit: bodyLimit }));
   app.use(urlencoded({ extended: false, limit: bodyLimit }));

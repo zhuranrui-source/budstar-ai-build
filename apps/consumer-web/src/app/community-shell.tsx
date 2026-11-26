@@ -1,64 +1,34 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ConsumerAuthChrome } from './consumer-auth';
-import { resolveActiveRole, type ConsumerRole } from './auth-session';
 
-export type CommunityTab = 'planet' | 'family' | 'learning' | 'growth';
+export type CommunityTab = 'planet' | 'favorites' | 'mine';
 
-const ALL_TABS: Array<{
-  id: CommunityTab;
-  href: string;
-  label: string;
-  roles: ConsumerRole[];
-}> = [
-  {
-    id: 'planet',
-    href: '/planet',
-    label: '星球',
-    roles: ['parent', 'student'],
-  },
-  { id: 'family', href: '/family', label: '孩子', roles: ['parent'] },
-  { id: 'learning', href: '/learning', label: '学习', roles: ['student'] },
-  { id: 'growth', href: '/growth', label: '成长', roles: ['student'] },
+const TABS: Array<{ id: CommunityTab; href: string; label: string }> = [
+  { id: 'planet', href: '/planet', label: '星球' },
+  { id: 'favorites', href: '/planet?view=favorites', label: '我的收藏' },
+  { id: 'mine', href: '/planet?view=mine', label: '我的分享' },
 ];
 
 export function CommunityShell({
   active,
   children,
-  subtitle,
+  onNavigate,
 }: {
   active: CommunityTab;
   children: ReactNode;
-  subtitle?: string;
+  /** 同页切换（星球页内）时不整页刷新。 */
+  onNavigate?: (tab: CommunityTab) => void;
 }) {
-  const [role, setRole] = useState<ConsumerRole | null>(null);
-
   useEffect(() => {
     const previous = document.body.className;
     document.body.className = 'community-body';
-    const syncRole = () => setRole(resolveActiveRole());
-    syncRole();
-    window.addEventListener('focus', syncRole);
-    window.addEventListener('budstar:consumer-session-changed', syncRole);
     return () => {
       document.body.className = previous;
-      window.removeEventListener('focus', syncRole);
-      window.removeEventListener('budstar:consumer-session-changed', syncRole);
     };
   }, []);
-
-  const tabs = ALL_TABS.filter((tab) =>
-    role ? tab.roles.includes(role) : true,
-  );
-  const resolvedSubtitle =
-    subtitle ??
-    (role === 'student'
-      ? '学生学习'
-      : role === 'parent'
-        ? '家庭门户'
-        : '星芽星球');
 
   return (
     <div className="community-body">
@@ -68,16 +38,21 @@ export function CommunityShell({
             <span className="community-brand-mark">芽</span>
             <span>
               <b>星芽星球</b>
-              {resolvedSubtitle ? <small>{resolvedSubtitle}</small> : null}
+              <small>作品 · 竞赛 · 星芽故事</small>
             </span>
           </Link>
         </div>
         <nav className="community-nav" aria-label="星芽星球导航">
-          {tabs.map((tab) => (
+          {TABS.map((tab) => (
             <Link
               key={tab.id}
               href={tab.href}
               className={tab.id === active ? 'is-active' : undefined}
+              onClick={(event) => {
+                if (!onNavigate) return;
+                event.preventDefault();
+                onNavigate(tab.id);
+              }}
             >
               {tab.label}
             </Link>

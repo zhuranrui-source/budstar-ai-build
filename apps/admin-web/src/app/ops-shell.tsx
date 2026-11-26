@@ -1,52 +1,93 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AdminApiClient } from './auth-client';
 
 export type OpsNavKey =
-  'desk' | 'subject-courses' | 'platform-leads' | 'consumer-accounts';
+  | 'desk'
+  | 'planet'
+  | 'planet-comments'
+  | 'subject-courses'
+  | 'platform-leads'
+  | 'consumer-accounts';
 
-const STAFF_NAV: Array<{ key: OpsNavKey; href: string; label: string }> = [
+type NavItem = { key: OpsNavKey; href: string; label: string };
+
+const STAFF_NAV: NavItem[] = [
   { key: 'desk', href: '/', label: '工作台' },
+  { key: 'planet', href: '/planet', label: '星球内容' },
+  { key: 'planet-comments', href: '/planet/comments', label: '评论管理' },
 ];
+
+const PLATFORM_NAV: NavItem[] = [
+  ...STAFF_NAV,
+  {
+    key: 'subject-courses',
+    href: '/platform/subject-courses',
+    label: '学科内容库',
+  },
+  { key: 'platform-leads', href: '/platform/leads', label: '线索 CRM' },
+  {
+    key: 'consumer-accounts',
+    href: '/platform/consumer-accounts',
+    label: '客户账号',
+  },
+];
+
+function apiClient() {
+  return new AdminApiClient(
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001/api',
+  );
+}
 
 export function OpsShell({
   active,
   displayName,
   roleLabel,
-  isPlatformAdmin = false,
+  isPlatformAdmin,
   onLogout,
   children,
   primaryAction,
 }: {
   active: OpsNavKey;
-  displayName: string;
-  roleLabel: string;
+  displayName?: string;
+  roleLabel?: string;
+  /** 不传时按当前登录会话自动判断。 */
   isPlatformAdmin?: boolean;
   onLogout?: () => void;
   children: ReactNode;
   primaryAction?: ReactNode;
 }) {
-  const nav = isPlatformAdmin
-    ? [
-        { key: 'desk' as const, href: '/', label: '工作台' },
-        {
-          key: 'subject-courses' as const,
-          href: '/platform/subject-courses',
-          label: '学科内容库',
-        },
-        {
-          key: 'platform-leads' as const,
-          href: '/platform/leads',
-          label: '线索 CRM',
-        },
-        {
-          key: 'consumer-accounts' as const,
-          href: '/platform/consumer-accounts',
-          label: '客户账号',
-        },
-      ]
-    : STAFF_NAV;
+  const [sessionInfo, setSessionInfo] = useState<{
+    isPlatformAdmin: boolean;
+    displayName: string;
+  } | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      await Promise.resolve();
+      const session = apiClient().readSession();
+      if (session) {
+        setSessionInfo({
+          isPlatformAdmin: session.actor.kind === 'platform-admin',
+          displayName: session.actor.displayName,
+        });
+      }
+    })();
+  }, []);
+
+  const platform = isPlatformAdmin ?? sessionInfo?.isPlatformAdmin ?? false;
+  const nav = platform ? PLATFORM_NAV : STAFF_NAV;
+  const name = displayName ?? sessionInfo?.displayName ?? '';
+  const role = roleLabel ?? (platform ? '平台管理员' : '员工');
+  const logout =
+    onLogout ??
+    (() => {
+      void apiClient()
+        .logout()
+        .finally(() => window.location.replace('/login'));
+    });
 
   return (
     <div className="ops-body">
@@ -77,9 +118,9 @@ export function OpsShell({
           >
             星芽星球
           </a>
-          <button type="button" onClick={onLogout}>
-            <span>{displayName}</span>
-            <small>{roleLabel}</small>
+          <button type="button" onClick={logout} title="退出登录">
+            <span>{name}</span>
+            <small>{role}</small>
           </button>
         </div>
       </header>

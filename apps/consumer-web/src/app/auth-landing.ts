@@ -51,6 +51,8 @@ export function needsIdentityChoice(input: {
   return !(input.lastIdentity && identities.includes(input.lastIdentity));
 }
 
+/** 登录后统一进入星芽星球（家庭、学习等旧门户已下线）。 */
 export function landingPathForIdentity(identity: ConsumerIdentity): string {
-  return identity === 'student' ? '/learning' : '/family';
+  void identity;
+  return '/planet';
 }

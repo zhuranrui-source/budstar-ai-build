@@ -1,4 +1,8 @@
-import type { AuthenticatedSession } from '@budstar/contracts';
+import type {
+  AdminPlanetCommentView,
+  AdminPlanetPostView,
+  AuthenticatedSession,
+} from '@budstar/contracts';
 
 const SESSION_KEY = 'budstar.admin.session';
 
@@ -68,6 +72,61 @@ export class AdminApiClient {
     );
     this.writeSession(session);
     return session;
+  }
+
+  // ===== 星芽星球 =====
+
+  async uploadPlanetImage(image: Blob): Promise<{ url: string }> {
+    return this.authenticatedRequest('/planet/images', undefined, {
+      method: 'POST',
+      body: image,
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+  }
+
+  async listPlanetPosts(status?: string): Promise<AdminPlanetPostView[]> {
+    return this.authenticatedRequest(
+      `/admin/planet/posts${status ? `?status=${status}` : ''}`,
+    );
+  }
+
+  async createPlanetPost(input: {
+    category: string;
+    title: string;
+    body: string;
+    imageUrls: string[];
+    studentInitial?: string;
+    guardianConsent: boolean;
+    pinned: boolean;
+  }): Promise<AdminPlanetPostView> {
+    return this.authenticatedRequest('/admin/planet/posts', undefined, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updatePlanetPost(
+    id: string,
+    patch: { status?: string; pinned?: boolean },
+  ): Promise<AdminPlanetPostView> {
+    return this.authenticatedRequest(`/admin/planet/posts/${id}`, undefined, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    });
+  }
+
+  async listPlanetComments(status?: string): Promise<AdminPlanetCommentView[]> {
+    return this.authenticatedRequest(
+      `/admin/planet/comments${status ? `?status=${status}` : ''}`,
+    );
+  }
+
+  async updatePlanetComment(id: string, status: string) {
+    return this.authenticatedRequest<{ id: string; status: string }>(
+      `/admin/planet/comments/${id}`,
+      undefined,
+      { method: 'PATCH', body: JSON.stringify({ status }) },
+    );
   }
 
   async listConsumerAccounts() {

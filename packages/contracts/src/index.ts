@@ -10,3 +10,4 @@ export * from './feedback';
 export * from './object-storage';
 export * from './platform';
 export * from './submission';
+export * from './planet';

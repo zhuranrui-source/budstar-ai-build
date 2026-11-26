@@ -55,16 +55,9 @@ export function requestConsumerAuth(detail: OpenConsumerAuthDetail = {}) {
   );
 }
 
-/** 未登录则弹出登录并提示；已登录则进入星球。 */
+/** 星球公开浏览：直接进入，互动时再登录。 */
 export function enterPlanetOrRequestAuth(navigate: (href: string) => void) {
-  if (resolveActiveRole()) {
-    navigate('/planet');
-    return;
-  }
-  requestConsumerAuth({
-    notice: '进入星芽星球前，请先登录或注册。',
-    next: '/planet',
-  });
+  navigate('/planet');
 }
 
 function normalizePhone(value: string): string {
@@ -426,8 +419,8 @@ export function ConsumerAuthChrome({
               onClick={() => setMenuOpen(false)}
             >
               <span>
-                <b>进入家庭门户</b>
-                <small>课节、作品、动态和成长反馈</small>
+                <b>进入星芽星球</b>
+                <small>作品、竞赛成果，我的收藏和分享</small>
               </span>
               <strong>→</strong>
             </Link>
