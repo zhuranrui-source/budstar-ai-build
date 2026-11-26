@@ -50,10 +50,6 @@ function EyeClosedIcon() {
   );
 }
 
-function isPlatformAdminSession(session: { actor: { kind: string } }): boolean {
-  return session.actor.kind === 'platform-admin';
-}
-
 export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   const client = useMemo(
     () =>
@@ -67,10 +63,6 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCampus, setSelectedCampus] = useState('');
-  const [overview, setOverview] = useState<{
-    modules: string[];
-    roles?: string[];
-  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [forbidden, setForbidden] = useState(false);
@@ -87,7 +79,7 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
         if (storedCampus && storedSession?.actor.kind === 'staff') {
           setSelectedCampus(storedCampus);
           try {
-            setOverview(await client.getCampusOverview(storedCampus));
+            await client.getCampusOverview(storedCampus);
           } catch {
             window.sessionStorage.removeItem('budstar.admin.campus');
             setSelectedCampus('');
@@ -136,11 +128,8 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
 
   async function enterWorkspace(nextSession: AuthenticatedSession) {
     setSession(nextSession);
-    if (nextSession.actor.kind === 'platform-admin') {
-      setOverview(await client.getPlatformOverview());
-    }
     if (loginOnly && nextSession.actor.kind === 'platform-admin') {
-      window.location.replace('/platform');
+      window.location.replace('/');
       return;
     }
     if (loginOnly) window.location.replace('/');
@@ -186,69 +175,59 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       await client.selectCampus(campusId);
       setSelectedCampus(campusId);
       window.sessionStorage.setItem('budstar.admin.campus', campusId);
-      setOverview(await client.getCampusOverview(campusId));
+      await client.getCampusOverview(campusId);
     });
-    void loadTodoStream(campusId);
   }
 
-  // ADR-0010 移动待办流：手机优先的真实聚合（提交/审核/线索），
-  // 桌面端同样展示；身份空间差异化（教师=校区队列，平台=CRM 线索）。
-  const [todo, setTodo] = useState<{
-    loaded: boolean;
-    submissions: Array<{
-      id: string;
-      lessonTitle: string;
-      studentDisplayName: string;
-      status: string;
-    }>;
-    moderation: Array<{ id: string; title: string; riskLevel: string }>;
-    leads: Array<{ id: string; parentName: string; status: string }>;
-  }>({ loaded: false, submissions: [], moderation: [], leads: [] });
-
-  async function loadTodoStream(campusId?: string) {
-    const campus = campusId ?? selectedCampus;
-    if (!campus) return;
-    try {
-      if (session && isPlatformAdminSession(session)) {
-        const leads = await client.listAppointmentLeads(campus, {
-          status: 'PENDING_CONTACT',
-        });
-        setTodo({ loaded: true, submissions: [], moderation: [], leads });
-      } else {
-        const [submissions, moderation] = await Promise.all([
-          client.listSubmissions(campus, { status: 'SUBMITTED' }),
-          client.listModerationQueue(campus),
-        ]);
-        setTodo({
-          loaded: true,
-          submissions,
-          moderation: moderation.filter(
-            (item) => item.status === 'PENDING_REVIEW',
-          ),
-          leads: [],
-        });
-      }
-    } catch {
-      setTodo((current) => ({ ...current, loaded: true }));
-    }
-  }
+  const [stats, setStats] = useState<{
+    courses: number | null;
+    chapters: number | null;
+    consumerAccounts: number | null;
+  }>({ courses: null, chapters: null, consumerAccounts: null });
 
   useEffect(() => {
-    if (selectedCampus) void loadTodoStream();
-  }, [selectedCampus]);
+    if (!session) return;
+    let active = true;
+    void (async () => {
+      const [courses, accounts] = await Promise.allSettled([
+        client.listSubjectCourses(),
+        session.actor.kind === 'platform-admin'
+          ? client.listConsumerAccounts()
+          : Promise.resolve([]),
+      ]);
+      if (!active) return;
+      setStats({
+        courses:
+          courses.status === 'fulfilled'
+            ? courses.value.filter((course) => course.status === 'PUBLISHED')
+                .length
+            : null,
+        chapters:
+          courses.status === 'fulfilled'
+            ? courses.value.reduce(
+                (sum, course) => sum + (course.chapterCount ?? 0),
+                0,
+              )
+            : null,
+        consumerAccounts:
+          accounts.status === 'fulfilled' ? accounts.value.length : null,
+      });
+    })();
+    return () => {
+      active = false;
+    };
+  }, [client, session]);
 
   async function logout() {
     await client.logout();
     window.sessionStorage.removeItem('budstar.admin.campus');
     setSession(null);
-    setOverview(null);
     setSelectedCampus('');
     window.location.replace('/login');
   }
 
   async function recoverFromForbidden() {
     setForbidden(false);
-    setOverview(null);
     try {
       const restored = await client.restoreSession();
       if (!restored) {
@@ -364,11 +343,7 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       <header className="ops-page-head">
         <div>
           <h1>工作台</h1>
-          <p>
-            {isPlatformAdmin
-              ? '平台治理空间'
-              : `下午好，${session.actor.displayName}`}
-          </p>
+          <p>你好，{session.actor.displayName}</p>
         </div>
       </header>
 
@@ -382,155 +357,75 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
         </div>
       )}
 
-      {!isPlatformAdmin && !selectedCampus ? (
-        <>
-          <div className="ops-page-head">
-            <div>
-              <h1>选择校区</h1>
-              <p>选择后，服务端仍会按账号成员关系和组合角色逐次校验。</p>
-            </div>
-          </div>
-          <div className="ops-class-list">
-            {session.campuses.map((campus) => (
-              <button
-                key={campus.id}
-                type="button"
-                disabled={loading}
-                onClick={() => void chooseCampus(campus.id)}
-              >
-                <span className="ops-class-cover">
-                  {campus.name.slice(0, 1)}
-                </span>
-                <span>
-                  <b>{campus.name}</b>
-                  <small>{campus.roles.join(' · ')}</small>
-                </span>
-                <em>进入</em>
-                <strong>选择</strong>
-              </button>
-            ))}
-          </div>
-        </>
+      {!isPlatformAdmin && !selectedCampus && session.campuses.length > 1 ? (
+        <div className="ops-class-list">
+          {session.campuses.map((campus) => (
+            <button
+              key={campus.id}
+              type="button"
+              disabled={loading}
+              onClick={() => void chooseCampus(campus.id)}
+            >
+              <span className="ops-class-cover">{campus.name.slice(0, 1)}</span>
+              <span>
+                <b>{campus.name}</b>
+                <small>{campus.roles.join(' · ')}</small>
+              </span>
+              <strong>进入</strong>
+            </button>
+          ))}
+        </div>
       ) : (
-        <>
-          <div className="ops-summary" aria-label="今日概览">
-            {(isPlatformAdmin
-              ? [
-                  [
-                    '治理模块',
-                    String(overview?.modules.length ?? '—'),
-                    '平台能力',
-                  ],
-                  ['校区业务', '—', '平台身份不可访问'],
-                  ['审计', '开', '关键操作留痕'],
-                  ['状态', loading ? '同步中' : '平稳', '实时会话'],
-                ]
-              : [
-                  ['待处理事项', '8', '数据来自实时 API'],
-                  ['本周课程', '12', overview?.roles?.join('、') ?? '加载中'],
-                  ['需要关注', '3', currentCampus?.name ?? ''],
-                  ['模块', String(overview?.modules.length ?? 0), '已授权'],
-                ]
-            ).map(([label, value, note]) => (
-              <article key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{note}</small>
-              </article>
-            ))}
-          </div>
-
-          <div className="ops-dashboard">
-            <section className="ops-task-board">
-              <header>
-                <div>
-                  <h2>今日待办</h2>
-                  <p>按紧急程度排序</p>
-                </div>
-              </header>
-              <div className="ops-task-list">
-                {(isPlatformAdmin
-                  ? [
-                      ['治理', '查看脱敏数据浏览器', '平台治理', '/platform'],
-                      [
-                        '课程',
-                        '课程版本治理',
-                        '仅平台身份',
-                        '/platform/subject-courses',
-                      ],
-                      [
-                        '线索',
-                        `待联系线索 ${todo.leads.length} 条`,
-                        'CRM 跟进',
-                        '/platform/leads',
-                      ],
-                    ]
-                  : [
-                      [
-                        '提交',
-                        `待点评作品 ${todo.submissions.length} 份`,
-                        '教学队列',
-                        '/teacher/submissions',
-                      ],
-                      [
-                        '审核',
-                        `社区待审核 ${todo.moderation.length} 条`,
-                        '风险控制',
-                        '/teacher/moderation',
-                      ],
-                      ['点评', '发布正式点评', '人工闭环', '/teacher/feedback'],
-                      ['绑定', '处理家庭绑定', '家长服务', '/teacher/family'],
-                    ]
-                ).map(([priority, title, meta, href]) => (
-                  <button
-                    key={title}
-                    type="button"
-                    onClick={() => {
-                      window.location.href = href;
-                    }}
-                  >
-                    <span
-                      className={`ops-task-priority${
-                        priority === '今天'
-                          ? ' is-high'
-                          : priority === '家长'
-                            ? ' is-warn'
-                            : ''
-                      }`}
-                    >
-                      {priority}
-                    </span>
-                    <span>
-                      <b>{title}</b>
-                      <small>{meta}</small>
-                    </span>
-                    <strong>去处理</strong>
-                  </button>
-                ))}
-              </div>
-            </section>
-            <aside className="ops-day-panel">
-              <h2>今日概览</h2>
-              <article>
-                <time>身份</time>
-                <div>
-                  <b>{session.actor.displayName}</b>
-                  <small>{roleLabel}</small>
-                </div>
-              </article>
-              <article>
-                <time>范围</time>
-                <div>
-                  <b>{isPlatformAdmin ? '平台治理' : '校区运营'}</b>
-                  <small>
-                    {(overview?.modules ?? []).slice(0, 3).join(' · ') ||
-                      '加载模块中'}
-                  </small>
-                </div>
-              </article>
-            </aside>
-          </div>
-        </>
+        <div className="ops-module-grid">
+          {(isPlatformAdmin
+            ? [
+                {
+                  title: '学科内容库',
+                  value:
+                    stats.courses === null
+                      ? '—'
+                      : `${stats.courses} 门 · ${stats.chapters} 章`,
+                  description: '互动实验室课程的编辑与发布',
+                  href: '/platform/subject-courses',
+                },
+                {
+                  title: '线索 CRM',
+                  value: '预约跟进',
+                  description: '官网和小程序提交的到校体验预约',
+                  href: '/platform/leads',
+                },
+                {
+                  title: '客户账号',
+                  value:
+                    stats.consumerAccounts === null
+                      ? '—'
+                      : `${stats.consumerAccounts} 个`,
+                  description: '为官网客户统一分配账号密码',
+                  href: '/platform/consumer-accounts',
+                },
+                {
+                  title: '星芽星球',
+                  value: '查看前台',
+                  description: '学生作品、竞赛成果与公司文化展示',
+                  href: 'https://budstar-ai.site/planet',
+                },
+              ]
+            : [
+                {
+                  title: '星芽星球',
+                  value: '查看前台',
+                  description: '学生作品、竞赛成果与公司文化展示',
+                  href: 'https://budstar-ai.site/planet',
+                },
+              ]
+          ).map((item) => (
+            <a key={item.title} className="ops-module-card" href={item.href}>
+              <span>{item.title}</span>
+              <strong>{item.value}</strong>
+              <small>{item.description}</small>
+            </a>
+          ))}
+        </div>
       )}
     </OpsShell>
   );

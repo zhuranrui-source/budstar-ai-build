@@ -4,25 +4,10 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 export type OpsNavKey =
-  | 'desk'
-  | 'classes'
-  | 'submissions'
-  | 'feedback'
-  | 'moderation'
-  | 'family'
-  | 'leads'
-  | 'platform'
-  | 'subject-courses'
-  | 'platform-leads'
-  | 'consumer-accounts';
+  'desk' | 'subject-courses' | 'platform-leads' | 'consumer-accounts';
 
 const STAFF_NAV: Array<{ key: OpsNavKey; href: string; label: string }> = [
   { key: 'desk', href: '/', label: '工作台' },
-  { key: 'classes', href: '/teacher/classes', label: '班级' },
-  { key: 'submissions', href: '/teacher/submissions', label: '提交' },
-  { key: 'feedback', href: '/teacher/feedback', label: '点评' },
-  { key: 'moderation', href: '/teacher/moderation', label: '审核' },
-  { key: 'family', href: '/teacher/family', label: '家庭' },
 ];
 
 export function OpsShell({
@@ -45,7 +30,6 @@ export function OpsShell({
   const nav = isPlatformAdmin
     ? [
         { key: 'desk' as const, href: '/', label: '工作台' },
-        { key: 'platform' as const, href: '/platform', label: '数据浏览器' },
         {
           key: 'subject-courses' as const,
           href: '/platform/subject-courses',
@@ -87,7 +71,7 @@ export function OpsShell({
         </nav>
         <div className="ops-user">
           <a
-            href="http://localhost:3000/planet"
+            href="https://budstar-ai.site/planet"
             target="_blank"
             rel="noreferrer"
           >

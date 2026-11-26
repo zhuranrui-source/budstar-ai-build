@@ -387,3 +387,44 @@ textarea {
     white-space: nowrap;
   }
 }
+
+.ops-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.ops-module-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--app-line, #deddd8);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--app-ink, #20201f);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ops-module-card:hover {
+  border-color: var(--app-accent-deep, #7d2f20);
+  box-shadow: 0 4px 14px rgba(32, 32, 31, 0.06);
+}
+
+.ops-module-card span {
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+}
+
+.ops-module-card strong {
+  font-size: 20px;
+}
+
+.ops-module-card small {
+  color: var(--app-muted, #6e6d69);
+  font-size: 12px;
+  line-height: 1.5;
+}

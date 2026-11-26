@@ -138,7 +138,11 @@ export default function SubjectCoursesPage() {
   }
 
   return (
-    <OpsShell active="platform" displayName="平台管理员" roleLabel="平台治理">
+    <OpsShell
+      active="subject-courses"
+      displayName="平台管理员"
+      roleLabel="平台治理"
+    >
       <section className="admin-section">
         <div className="admin-section-head">
           <h2>学科内容库</h2>

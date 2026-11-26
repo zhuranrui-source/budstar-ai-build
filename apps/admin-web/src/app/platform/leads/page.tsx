@@ -74,10 +74,13 @@ export default function LeadsPage() {
       ),
     [],
   );
+  // 平台管理员不选校区：未选择时使用默认校区（目前只有深圳南山校区）。
   const campusId =
     typeof window === 'undefined'
       ? ''
-      : (window.sessionStorage.getItem(CAMPUS_KEY) ?? '');
+      : (window.sessionStorage.getItem(CAMPUS_KEY) ??
+        process.env.NEXT_PUBLIC_DEFAULT_CAMPUS_ID ??
+        'shenzhen-nanshan');
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -249,7 +252,7 @@ export default function LeadsPage() {
 
   return (
     <OpsShell
-      active="leads"
+      active="platform-leads"
       displayName="老师"
       roleLabel="校区工作台"
       onLogout={() => window.location.replace('/login')}
