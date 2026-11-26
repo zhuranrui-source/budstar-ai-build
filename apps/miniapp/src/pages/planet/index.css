@@ -1,0 +1,175 @@
+.planet-page {
+  padding-top: 28rpx;
+}
+
+.planet-head {
+  margin-bottom: 24rpx;
+}
+
+.planet-filter {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+  margin-top: 28rpx;
+  overflow-x: auto;
+}
+
+.planet-filter-button {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 4rpx 22rpx;
+  border: 1rpx solid #eadfd9;
+  border-radius: 999rpx;
+  background: #fff;
+  color: #76665f;
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.planet-filter-button::after {
+  border: 0;
+}
+
+.planet-filter-button.is-active {
+  border-color: #241b18;
+  background: #241b18;
+  color: #fff;
+}
+
+.planet-waterfall {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16rpx;
+}
+
+.planet-card {
+  overflow: hidden;
+  border: 1rpx solid #eadfd9;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 12rpx 30rpx rgba(74, 48, 37, 0.07);
+}
+
+.planet-media {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #f3efe9;
+}
+
+.planet-image,
+.planet-cover {
+  display: block;
+  width: 100%;
+  height: 250rpx;
+}
+
+.planet-card--tall .planet-image,
+.planet-card--tall .planet-cover {
+  height: 330rpx;
+}
+
+.planet-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #f79b7f, #f4845f);
+  color: #fff;
+  font-size: 72rpx;
+  font-weight: 900;
+}
+
+.planet-cover--1 {
+  background: linear-gradient(145deg, #85cc92, #6bbf7a);
+}
+
+.planet-cover--2 {
+  background: linear-gradient(145deg, #ed9dc4, #e882b4);
+}
+
+.planet-cover--3 {
+  background: linear-gradient(145deg, #8dc4ff, #6eb5ff);
+}
+
+.planet-channel-tag {
+  position: absolute;
+  top: 14rpx;
+  left: 14rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(36, 27, 24, 0.76);
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 800;
+}
+
+.planet-copy {
+  padding: 20rpx;
+}
+
+.planet-title,
+.planet-summary {
+  display: block;
+}
+
+.planet-title {
+  color: #241b18;
+  font-size: 27rpx;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.planet-summary {
+  display: -webkit-box;
+  margin-top: 9rpx;
+  overflow: hidden;
+  color: #76665f;
+  font-size: 21rpx;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.planet-author {
+  display: flex;
+  align-items: center;
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #eadfd9;
+}
+
+.planet-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42rpx;
+  height: 42rpx;
+  margin-right: 10rpx;
+  border-radius: 50%;
+  background: #a84730;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 900;
+}
+
+.planet-author-copy {
+  min-width: 0;
+}
+
+.planet-author-copy text {
+  display: block;
+  overflow: hidden;
+  color: #493d37;
+  font-size: 20rpx;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planet-author-copy text:last-child {
+  margin-top: 2rpx;
+  color: #998e88;
+  font-size: 17rpx;
+  font-weight: 400;
+}

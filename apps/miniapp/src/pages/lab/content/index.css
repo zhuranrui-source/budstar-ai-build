@@ -1,0 +1,124 @@
+.lab-content-page {
+  min-height: 100vh;
+  padding-top: 24rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(244, 132, 95, 0.16),
+      transparent 28%
+    ),
+    #fffaf6;
+}
+
+.content-head {
+  margin-bottom: 26rpx;
+  padding: 18rpx 8rpx;
+}
+
+.content-kicker,
+.content-title,
+.content-course {
+  display: block;
+}
+
+.content-kicker {
+  color: #f4845f;
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+
+.content-title {
+  margin-top: 12rpx;
+  color: #241b18;
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.content-course {
+  margin-top: 10rpx;
+  color: #76665f;
+  font-size: 24rpx;
+}
+
+.chapter-rich-card {
+  padding: 34rpx 30rpx;
+  border: 1rpx solid #eadfd9;
+  border-radius: 30rpx;
+  background: #fff;
+  box-shadow: 0 16rpx 38rpx rgba(74, 48, 37, 0.07);
+}
+
+.chapter-rich {
+  color: #3c312c;
+  font-size: 28rpx;
+  line-height: 1.8;
+}
+
+.chapter-rich h2 {
+  margin: 0 0 22rpx;
+  color: #241b18;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.chapter-rich h3 {
+  margin: 32rpx 0 12rpx;
+  color: #9b402a;
+  font-size: 29rpx;
+  font-weight: 900;
+}
+
+.chapter-rich p {
+  margin: 14rpx 0;
+}
+
+.chapter-rich ul {
+  margin: 14rpx 0;
+  padding-left: 36rpx;
+}
+
+.chapter-rich li {
+  margin: 8rpx 0;
+}
+
+.chapter-rich blockquote {
+  margin: 28rpx 0 0;
+  padding: 20rpx 22rpx;
+  border-left: 6rpx solid #f4845f;
+  border-radius: 0 16rpx 16rpx 0;
+  background: #fff0e9;
+  color: #76574c;
+}
+
+.content-finish-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 7rpx;
+  margin-top: 24rpx;
+  padding: 26rpx;
+  border-radius: 24rpx;
+  background: #241b18;
+  color: #fff;
+}
+
+.content-finish-tip text:first-child {
+  color: #f5b49e;
+  font-size: 19rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+
+.content-finish-tip text:last-child {
+  font-size: 25rpx;
+  font-weight: 750;
+}
+
+.content-back-button {
+  border-radius: 999rpx;
+  background: #fff;
+  color: #9b402a;
+  font-size: 26rpx;
+}

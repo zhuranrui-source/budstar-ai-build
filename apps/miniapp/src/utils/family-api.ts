@@ -1,21 +1,43 @@
-/**
- * 家庭视图 API（ADR-0007）：家长 token 经家庭代理访问学生课节与作品；
- * 学科内容（K12 互动实验室）按学段/学科只读已发布目录。
- */
-import { request, type WechatSession } from './api';
+import { request } from './api';
+import type { SubmissionStatus } from './submission';
 
 export type StudentSwitcher = {
-  students: Array<{ studentProfileId: string; displayName: string }>;
+  students: Array<{
+    studentProfileId: string;
+    displayName: string;
+    campusId?: string;
+    bindingId?: string;
+  }>;
   selectedStudentProfileId: string | null;
+};
+
+export type StudentClass = {
+  classId: string;
+  className: string;
+  classCode?: string;
+  status?: 'DRAFT' | 'ACTIVE' | 'CLOSED';
+  coursePackageTitle?: string;
 };
 
 export type StudentLesson = {
   mainLessonId: string;
   sequence: number;
   title: string;
-  track: string;
-  assignment: { title: string } | null;
-  submission: { id: string; status: string } | null;
+  track: 'AIGC' | 'VIBE_CODING';
+  theme?: string;
+  coreDeliverable?: string;
+  learningGoals?: string;
+  assignment: {
+    id?: string;
+    title: string;
+    requirements?: string;
+    submissionKinds?: string[];
+  } | null;
+  submission: {
+    id: string;
+    status: SubmissionStatus;
+    updatedAt?: string;
+  } | null;
 };
 
 export type Curriculum = {
@@ -32,77 +54,29 @@ export type SubjectCourseSummary = {
   gradeBand: string;
   gradeLevel: number | null;
   title: string;
+  status?: 'DRAFT' | 'PUBLISHED';
+  publishedAt?: string | null;
   chapterCount: number;
 };
 
-function auth(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}` };
-}
+export type SubjectChapter = {
+  id: string;
+  sequence: number;
+  title: string;
+  contentHtml: string;
+  contentUrl: string | null;
+  aiGuidePrompt: string | null;
+  aiContext: string | null;
+};
 
-export async function listBoundStudents(
-  accessToken: string,
-): Promise<StudentSwitcher> {
-  return request<StudentSwitcher>('/family/students', accessToken);
-}
-
-export async function selectActiveStudent(
-  accessToken: string,
-  studentProfileId: string,
-): Promise<unknown> {
-  return request('/family/active-student', accessToken, {
-    method: 'POST',
-    body: JSON.stringify({ studentProfileId }),
-  });
-}
-
-export async function listStudentClasses(
-  accessToken: string,
-  studentProfileId: string,
-): Promise<Array<{ classId: string; className: string }>> {
-  return request(`/family/students/${studentProfileId}/classes`, accessToken);
-}
-
-export async function getStudentCurriculum(
-  accessToken: string,
-  studentProfileId: string,
-  classId: string,
-): Promise<Curriculum> {
-  return request<Curriculum>(
-    `/family/students/${studentProfileId}/classes/${classId}/lessons`,
-    accessToken,
-  );
-}
-
-export async function transitionSubmission(
-  accessToken: string,
-  studentProfileId: string,
-  submissionId: string,
-  toStatus: 'SUBMITTED' | 'RESUBMITTED',
-): Promise<unknown> {
-  return request(
-    `/family/students/${studentProfileId}/submissions/${submissionId}/transitions`,
-    accessToken,
-    { method: 'POST', body: JSON.stringify({ toStatus }) },
-  );
-}
-
-export async function listPublishedSubjectCourses(
-  accessToken: string,
-): Promise<SubjectCourseSummary[]> {
-  // 家庭视图读取面（ADR-0007）；partner 端点是合作方专属，家长 token 会被 403
-  return request<SubjectCourseSummary[]>(
-    '/family/subject-courses',
-    accessToken,
-  );
-}
-
-export type { WechatSession };
-
-// ===== 星芽星球与成长报告（家庭视图读取面） =====
+export type SubjectCourseDetail = SubjectCourseSummary & {
+  chapters: SubjectChapter[];
+};
 
 export type PlanetPost = {
   id: string;
   title: string;
+  body: string;
   visibilityScope: string;
   studentDisplayName: string;
   publishedAt: string | null;
@@ -122,6 +96,82 @@ export type GrowthViewData = {
   }>;
 };
 
+export async function listBoundStudents(
+  accessToken: string,
+): Promise<StudentSwitcher> {
+  return request<StudentSwitcher>('/family/students', accessToken);
+}
+
+export async function bindFamilyWithCode(
+  accessToken: string,
+  familyViewCode: string,
+  displaySwitchGranted: boolean,
+): Promise<unknown> {
+  return request('/family/bindings', accessToken, {
+    method: 'POST',
+    body: { familyViewCode, displaySwitchGranted },
+  });
+}
+
+export async function selectActiveStudent(
+  accessToken: string,
+  studentProfileId: string,
+): Promise<StudentSwitcher> {
+  return request('/family/active-student', accessToken, {
+    method: 'POST',
+    body: { studentProfileId },
+  });
+}
+
+export async function listStudentClasses(
+  accessToken: string,
+  studentProfileId: string,
+): Promise<StudentClass[]> {
+  return request(
+    `/family/students/${encodeURIComponent(studentProfileId)}/classes`,
+    accessToken,
+  );
+}
+
+export async function getStudentCurriculum(
+  accessToken: string,
+  studentProfileId: string,
+  classId: string,
+): Promise<Curriculum> {
+  return request(
+    `/family/students/${encodeURIComponent(studentProfileId)}/classes/${encodeURIComponent(classId)}/lessons`,
+    accessToken,
+  );
+}
+
+export async function transitionSubmission(
+  accessToken: string,
+  studentProfileId: string,
+  submissionId: string,
+  toStatus: 'SUBMITTED' | 'RESUBMITTED',
+): Promise<unknown> {
+  return request(
+    `/family/students/${encodeURIComponent(studentProfileId)}/submissions/${encodeURIComponent(submissionId)}/transitions`,
+    accessToken,
+    { method: 'POST', body: { toStatus } },
+  );
+}
+
+/** 学科实验室无需登录即可浏览。 */
+export async function listPublishedSubjectCourses(): Promise<
+  SubjectCourseSummary[]
+> {
+  return request<SubjectCourseSummary[]>('/public/subject-courses');
+}
+
+export async function getPublishedSubjectCourse(
+  courseId: string,
+): Promise<SubjectCourseDetail> {
+  return request<SubjectCourseDetail>(
+    `/public/subject-courses/${encodeURIComponent(courseId)}`,
+  );
+}
+
 export async function listPlanetFeed(
   accessToken: string,
 ): Promise<PlanetPost[]> {
@@ -133,7 +183,7 @@ export async function getGrowthView(
   studentProfileId: string,
 ): Promise<GrowthViewData> {
   return request<GrowthViewData>(
-    `/family/growth/${studentProfileId}`,
+    `/family/growth/${encodeURIComponent(studentProfileId)}`,
     accessToken,
   );
 }
@@ -144,17 +194,12 @@ export async function saveSubmissionDraft(
   input: {
     classId: string;
     mainLessonId: string;
-    content: {
-      title: string;
-      description: string;
-      imageUrls?: string[];
-      workUrl?: string;
-    };
+    content: Record<string, unknown>;
   },
 ): Promise<{ id: string }> {
   return request<{ id: string }>(
-    `/family/students/${studentProfileId}/submissions/draft`,
+    `/family/students/${encodeURIComponent(studentProfileId)}/submissions/draft`,
     accessToken,
-    { method: 'PUT', body: JSON.stringify(input) },
+    { method: 'PUT', body: input },
   );
 }

@@ -1,0 +1,103 @@
+.home-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  color: #fff;
+  transition: background-color 0.5s;
+}
+
+.home-hero-ghost {
+  position: absolute;
+  top: 18vh;
+  left: 0;
+  width: 100%;
+  color: rgba(255, 255, 255, 0.16);
+  font-size: 200rpx;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.home-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx 0;
+}
+
+.home-brand-name {
+  font-size: 40rpx;
+  font-weight: 900;
+}
+
+.home-brand-link {
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.24);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.home-swiper {
+  position: relative;
+  height: 58vh;
+  margin-top: 16rpx;
+}
+
+.home-slide {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  transform: scale(0.72);
+  transform-origin: center bottom;
+  opacity: 0.55;
+  transition:
+    transform 0.4s ease,
+    opacity 0.4s ease;
+}
+
+.home-slide.is-active {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.home-slide-img {
+  width: 100%;
+  height: 100%;
+}
+
+.home-hero-copy {
+  position: relative;
+  padding: 16rpx 40rpx 0;
+  text-align: center;
+}
+
+.home-hero-label {
+  display: block;
+  font-size: 52rpx;
+  font-weight: 900;
+}
+
+.home-hero-desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+.home-hero-cta {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 20rpx 64rpx;
+  border-radius: 999rpx;
+  background: #fff;
+  color: #241b18;
+  font-size: 30rpx;
+  font-weight: 800;
+}

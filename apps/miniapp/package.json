@@ -8,7 +8,8 @@
     "dev:weapp": "taro build --type weapp --watch",
     "typecheck": "tsc --noEmit",
     "upload:ci": "node ../../scripts/upload-miniapp.mjs",
-    "preview:ci": "node ../../scripts/upload-miniapp.mjs --preview"
+    "preview:ci": "node ../../scripts/upload-miniapp.mjs --preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@budstar/contracts": "workspace:*",
@@ -33,6 +34,7 @@
     "babel-preset-taro": "4.1.7",
     "miniprogram-ci": "^2.1.31",
     "typescript": "^5",
+    "vitest": "4.1.10",
     "webpack": "5.91.0"
   }
 }

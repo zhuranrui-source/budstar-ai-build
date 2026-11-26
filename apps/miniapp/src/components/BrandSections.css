@@ -1,0 +1,286 @@
+.brand-sections {
+  margin-top: 8rpx;
+}
+
+.home-section {
+  padding: 48rpx 0 8rpx;
+}
+
+.home-section--tint {
+  margin-top: 40rpx;
+  padding: 40rpx 28rpx 28rpx;
+  border-radius: 32rpx;
+  background: #fff0e9;
+}
+
+.home-label {
+  display: block;
+  margin-bottom: 8rpx;
+  color: var(--color-primary-dark);
+  font-size: 24rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+
+.home-label--light {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.home-h2 {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 46rpx;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.home-lead {
+  display: block;
+  margin-bottom: 24rpx;
+  color: var(--color-secondary);
+  font-size: 27rpx;
+  line-height: 1.6;
+}
+
+.home-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.home-card {
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: #fff0e9;
+}
+
+.home-card--half {
+  width: calc(50% - 10rpx);
+}
+
+.home-card-no {
+  display: block;
+  color: var(--color-primary);
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.home-card-title {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.home-card-sub {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--color-primary-dark);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.home-card-text {
+  display: block;
+  margin-top: 10rpx;
+  color: var(--color-secondary);
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.home-path {
+  margin-bottom: 20rpx;
+  padding: 32rpx;
+  border-radius: 32rpx;
+  color: #fff;
+}
+
+.home-path-age {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.home-path-title {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.home-path-text {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.home-report {
+  padding: 40rpx 32rpx;
+  border-radius: 36rpx;
+  background: #6bbf7a;
+  color: #fff;
+}
+
+.home-report-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.home-report-text {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 27rpx;
+  line-height: 1.6;
+}
+
+.home-report-btn {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 18rpx 52rpx;
+  border-radius: 999rpx;
+  background: #fff;
+  color: #241b18;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.home-event {
+  margin-bottom: 16rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  background: #fff;
+}
+
+.home-event-time {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.home-event-title {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.home-event-sub {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--color-secondary);
+  font-size: 25rpx;
+}
+
+.home-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96rpx;
+  height: 96rpx;
+  margin-bottom: 12rpx;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.home-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.home-address {
+  margin-top: 4rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: #fff0e9;
+}
+
+.home-cta {
+  margin-top: 40rpx;
+  padding: 40rpx 28rpx 28rpx;
+  border-radius: 32rpx;
+  background: #f4845f;
+  color: #fff;
+}
+
+.home-cta-title {
+  display: block;
+  margin-bottom: 24rpx;
+  font-size: 46rpx;
+  font-weight: 900;
+}
+
+.home-form {
+  padding: 32rpx 28rpx;
+  border-radius: 32rpx;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.home-form-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.home-form-sub {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--color-secondary);
+  font-size: 25rpx;
+}
+
+.home-field {
+  display: block;
+  margin: 22rpx 0 8rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.home-input {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid var(--color-border);
+  border-radius: 20rpx;
+  background: #fffaf6;
+  font-size: 28rpx;
+  line-height: 84rpx;
+}
+
+.home-picker {
+  color: var(--color-text);
+}
+
+.home-submit {
+  margin-top: 32rpx;
+  border-radius: 999rpx;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.home-submit[disabled] {
+  opacity: 0.6;
+}
+
+.home-form-note {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--color-secondary);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.home-form-note--error {
+  color: var(--color-danger);
+}
+
+.home-section--tint .home-card {
+  background: #fff;
+}
