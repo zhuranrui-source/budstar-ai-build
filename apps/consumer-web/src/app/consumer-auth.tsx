@@ -591,27 +591,6 @@ export function ConsumerAuthChrome({
                     : '使用手机号验证码登录'}
                 </button>
               </form>
-              <div className="consumer-auth-divider">
-                <span>或使用</span>
-              </div>
-              <div className="consumer-social-login">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNotice('微信登录尚未接入，请先使用手机号登录。')
-                  }
-                >
-                  <span>微</span>微信登录
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNotice('企业微信登录尚未接入，请先使用手机号登录。')
-                  }
-                >
-                  <span>企</span>企业微信登录
-                </button>
-              </div>
               <small>首次手机号登录将自动创建账号，默认进入家长身份。</small>
             </div>
           ) : (
