@@ -125,13 +125,39 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
     if (loginOnly) window.location.replace('/');
   }
 
+  /** 登录阶段的错误就地提示，不进入“无权访问”页面。 */
+  async function runLogin(
+    action: () => Promise<void>,
+    unauthorizedMessage: string,
+  ) {
+    setLoading(true);
+    setError('');
+    try {
+      await action();
+    } catch (cause) {
+      setError(
+        cause instanceof ApiRequestError
+          ? cause.status === 401
+            ? unauthorizedMessage
+            : cause.message
+          : '网络异常，请检查网络后重试',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function submitLogin(event: FormEvent) {
     event.preventDefault();
-    await run(async () => {
+    if (!loginIdentifier.trim() || !password) {
+      setError('请填写账号和密码');
+      return;
+    }
+    await runLogin(async () => {
       await enterWorkspace(
         await client.login(entry, loginIdentifier.trim(), password),
       );
-    });
+    }, '账号或密码不正确（请确认员工/平台管理员入口是否选对）');
   }
 
   async function sendCode() {
@@ -140,11 +166,11 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       setError('请输入有效的 11 位手机号');
       return;
     }
-    await run(async () => {
+    await runLogin(async () => {
       await client.requestOtp(phone);
       setCodeCooldown(60);
       setNotice('验证码已发送，5 分钟内有效');
-    });
+    }, '验证码发送失败，请稍后重试');
   }
 
   async function submitOtp(event: FormEvent) {
@@ -154,9 +180,9 @@ export function AdminWorkspace({ loginOnly = false }: { loginOnly?: boolean }) {
       setError('请填写正确的手机号和 6 位验证码');
       return;
     }
-    await run(async () => {
+    await runLogin(async () => {
       await enterWorkspace(await client.verifyOtp(phone, otp));
-    });
+    }, '验证码不正确或已过期，请重新获取');
   }
 
   function switchLoginMode(nextMode: 'phone' | 'password') {

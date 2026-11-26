@@ -33,7 +33,8 @@ export class ForbiddenError extends ApiRequestError {
 export class AdminApiClient {
   constructor(
     private readonly baseUrl: string,
-    private readonly fetcher: FetchLike = fetch,
+    // 浏览器要求 fetch 以 window 为接收者调用；直接存为属性再 this.fetcher() 会抛 Illegal invocation。
+    private readonly fetcher: FetchLike = (input, init) => fetch(input, init),
     private readonly storage: StorageLike = typeof window === 'undefined'
       ? {
           getItem: () => null,
